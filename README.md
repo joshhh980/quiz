@@ -22,6 +22,11 @@ the projector operator selects **Enable applause**.
 Set `APP_URL` to the public base URL of the app. The `/qr` page and projector
 QR overlay encode its `/projector` URL.
 
+Enter each team's current total on the score-entry page; team totals are
+independent of the current round. The quiz starts with four rounds. Use
+**Add tiebreaker round** on the admin control board to add another round when
+needed; the projector displays the current round number without a fixed total.
+
 The admin control board can announce a selected team as the winner on the
 projector. The `/guest-of-honor` page is a standalone recognition display; its
 current title and guest details are placeholders.

@@ -33,7 +33,7 @@
             <h1><span class="title-before" data-copy="adminTitleBefore">Run the</span> <span class="title-accent" data-copy="adminTitleAccent">show.</span></h1>
             <p class="intro-copy" data-copy="adminSubtitle">Your controls stay in sync with the projector and score entry screens.</p>
           </div>
-          <div class="round-chip"><span class="round-chip-dot"></span><span>LIVE GAME</span><span class="round-chip-divider">/</span><span id="admin-round-label">ROUND 1 OF 4</span></div>
+          <div class="round-chip"><span class="round-chip-dot"></span><span>LIVE GAME</span><span class="round-chip-divider">/</span><span id="admin-round-label">ROUND 1</span></div>
         </section>
 
         <section class="admin-controls-grid" aria-label="Quiz controls">
@@ -44,9 +44,10 @@
                 <label class="round-control" for="round-select">
                   <span>ROUND</span>
                   <select id="round-select" aria-label="Quiz round">
-                    <option value="1">1 / 4</option><option value="2">2 / 4</option><option value="3">3 / 4</option><option value="4">4 / 4</option>
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
                   </select>
                 </label>
+                <button class="button button-quiet add-round-button" id="add-round" type="button" disabled>Add tiebreaker round</button>
                 <span class="status-pill" id="timer-status">READY</span>
               </div>
             </div>
@@ -63,7 +64,7 @@
               <button class="button button-quiet bonus-timer-button" id="bonus-timer" type="button">Start bonus · 10s</button>
               <label class="duration-control" for="question-duration">
                 <span>Question</span>
-                <input id="question-duration" type="number"  step="1" value="60" aria-label="Question timer duration in seconds" />
+                <input id="question-duration" type="number" min="1" step="1" value="60" aria-label="Question timer duration in seconds" />
                 <span>s</span>
               </label>
             </div>

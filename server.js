@@ -15,6 +15,8 @@ try {
 
 const publicDirectory = path.join(__dirname, "public");
 const teamLogoPattern = /^\/team-logos\/[a-z0-9-]+\.(?:svg|png|jpe?g|webp)$/i;
+const initialRoundCount = 4;
+const maxRounds = 100;
 const contentFile = path.join(__dirname, "data", "quiz-content.json");
 const stateFile = path.resolve(process.env.QUIZ_STATE_FILE || path.join(__dirname, ".quiz-state.json"));
 const databasePool = process.env.DATABASE_URL
@@ -229,8 +231,8 @@ function newGameState() {
       ...team,
       color: content.theme.teamColors[index % content.theme.teamColors.length],
       logo: team.logo ?? null,
-      roundScores: [0, 0, 0, 0],
     })),
+    roundCount: initialRoundCount,
     roundNumber: 1,
     questionTimerDuration: 60,
     timerMode: "question",
@@ -255,7 +257,7 @@ function serializeState(value) {
     teamScores: Object.fromEntries(
       teams.filter((team) => configuredTeamIds.has(team.id)).map((team) => [
         team.id,
-        { total: team.score, rounds: team.roundScores },
+        { total: team.score },
       ]),
     ),
   };
@@ -297,9 +299,18 @@ async function restoreState() {
       .map((team) => [team.id, { total: team.score, rounds: team.roundScores }]));
     const savedScores = savedState.teamScores && typeof savedState.teamScores === "object" &&
       !Array.isArray(savedState.teamScores) ? savedState.teamScores : legacyScores;
+    const savedRoundCount = Math.max(
+      initialRoundCount,
+      savedState.roundCount ?? 0,
+      savedState.roundNumber ?? 0,
+      ...Object.values(savedScores).map((score) => score && typeof score === "object"
+        ? score.rounds?.length ?? 0
+        : 0),
+    );
 
     state = {
       ...state,
+      roundCount: savedRoundCount,
       roundNumber: savedState.roundNumber ?? state.roundNumber,
       questionTimerDuration: savedState.questionTimerDuration ??
         ([30, 45, 60].includes(savedState.timerDuration) ? savedState.timerDuration : state.questionTimerDuration),
@@ -322,7 +333,6 @@ async function restoreState() {
           score: typeof savedScores[team.id] === "number"
             ? savedScores[team.id]
             : savedScores[team.id]?.total ?? team.score,
-          roundScores: savedScores[team.id]?.rounds ?? [0, 0, 0, 0],
         })),
       ],
     };
@@ -356,20 +366,18 @@ const stateReady = restoreState();
 
 function isValidState(value) {
   return value && Array.isArray(value.teams) &&
-    Number.isInteger(value.roundNumber) && value.roundNumber >= 1 && value.roundNumber <= 4 &&
+    Number.isInteger(value.roundCount) && value.roundCount >= initialRoundCount && value.roundCount <= maxRounds &&
+    Number.isInteger(value.roundNumber) && value.roundNumber >= 1 && value.roundNumber <= value.roundCount &&
     value.teams.length === content.teams.length &&
     value.teams.every((team, index) => team.id === content.teams[index].id) &&
     value.teams.length <= 100 &&
     value.teams.every((team) => team && typeof team.id === "string" &&
       typeof team.name === "string" && team.name.length > 0 && team.name.length <= 24 &&
       Number.isSafeInteger(team.score) && team.score >= 0 &&
-      Array.isArray(team.roundScores) && team.roundScores.length === 4 &&
-      team.roundScores.every((score) => Number.isSafeInteger(score) && score >= 0) &&
-      team.score >= team.roundScores.reduce((total, score) => total + score, 0) &&
       (team.logo === null || (typeof team.logo === "string" && teamLogoPattern.test(team.logo))) &&
       typeof team.color === "string" && teamColors.has(team.color)) &&
-    Number.isInteger(value.questionTimerDuration) &&
-    value.questionTimerDuration >= 30 && value.questionTimerDuration <= 60 &&
+    Number.isSafeInteger(value.questionTimerDuration) &&
+    value.questionTimerDuration >= 1 &&
     (value.timerMode === "question"
       ? value.timerDuration === value.questionTimerDuration
       : value.timerMode === "bonus" && value.timerDuration === 10) &&

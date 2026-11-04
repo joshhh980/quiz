@@ -20,7 +20,8 @@ let lastTimerObservation = null;
 let timerSoundEnabled = false;
 let roundSpeechEnabled = false;
 let lastRenderedRound = null;
-let lastScoreRound = null;
+const INITIAL_ROUND_COUNT = 4;
+const MAX_ROUNDS = 100;
 
 function escapeHtml(value) {
   return value.replace(/[&<>"']/g, (character) => ({
@@ -48,10 +49,10 @@ async function loadContent() {
     ...team,
     color: teamColors.includes(team.color) ? team.color : teamColors[index % teamColors.length],
     logo: team.logo ?? null,
-    roundScores: [0, 0, 0, 0],
   }));
   initialState = {
     teams: defaultTeams.map((team) => ({ ...team })),
+    roundCount: INITIAL_ROUND_COUNT,
     roundNumber: 1,
     questionTimerDuration: 60,
     timerMode: "question",
@@ -384,7 +385,9 @@ function launchIntroConfetti(canvasSelector = "#team-intro-confetti") {
 function announceRound(roundNumber) {
   if (!roundSpeechEnabled) return;
   const roundNames = ["one", "two", "three", "four"];
-  const announcement = new SpeechSynthesisUtterance(`Round ${roundNames[roundNumber - 1]}`);
+  const announcement = new SpeechSynthesisUtterance(
+    `Round ${roundNames[roundNumber - 1] ?? roundNumber}`,
+  );
   announcement.lang = document.documentElement.lang || "en";
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(announcement);
@@ -403,7 +406,19 @@ function renderTimer() {
   updateTimerElements($("#timer-display"), $("#timer-progress"), $("#timer-status"));
   updateTimerElements($("#projector-timer"), $("#projector-progress"), $("#projector-timer-status"));
   const roundSelect = $("#round-select");
-  if (roundSelect) roundSelect.value = String(state.roundNumber);
+  const roundCount = state.roundCount;
+  if (roundSelect) {
+    if (roundSelect.options.length !== roundCount) {
+      roundSelect.innerHTML = Array.from({ length: roundCount }, (_, index) =>
+        `<option value="${index + 1}">${index + 1}</option>`,
+      ).join("");
+    }
+    roundSelect.value = String(state.roundNumber);
+  }
+  const addRoundButton = $("#add-round");
+  if (addRoundButton) {
+    addRoundButton.disabled = !hasLoadedState || !socket?.connected || roundCount >= MAX_ROUNDS;
+  }
   const questionDurationInput = $("#question-duration");
   if (questionDurationInput && document.activeElement !== questionDurationInput) {
     questionDurationInput.value = String(state.questionTimerDuration);
@@ -413,7 +428,7 @@ function renderTimer() {
   if (adminTimerLabel) adminTimerLabel.textContent = timerTypeLabel;
   const projectorTimerLabel = $("#projector-timer-label");
   if (projectorTimerLabel) projectorTimerLabel.textContent = timerTypeLabel;
-  const roundLabel = `ROUND ${state.roundNumber} OF 4`;
+  const roundLabel = `ROUND ${state.roundNumber}`;
   if (page === "projector" && lastRenderedRound !== null && lastRenderedRound !== state.roundNumber) {
     announceRound(state.roundNumber);
   }
@@ -523,34 +538,14 @@ function teamLogoMarkup(team, className) {
 
 function renderScores() {
   const canEditScores = hasLoadedState && Boolean(socket?.connected);
-  ["#question-points", "#bonus-points", "#clear-scores", "#clear-all-scores"]
-    .forEach((selector) => {
-      const control = $(selector);
-      if (control) control.disabled = !canEditScores;
-    });
-  if (lastScoreRound !== null && lastScoreRound !== state.roundNumber) {
-    ["#question-points", "#bonus-points"].forEach((selector) => {
-      const input = $(selector);
-      if (input) input.value = input.defaultValue;
-    });
-  }
-  lastScoreRound = state.roundNumber;
-  const scoreRoundLabel = $("#score-round-label");
-  if (scoreRoundLabel) scoreRoundLabel.textContent = `ROUND ${state.roundNumber} OF 4`;
-  const scoreRoundHeading = $("#score-round-heading");
-  if (scoreRoundHeading) scoreRoundHeading.textContent = `ROUND ${state.roundNumber}`;
+  const clearScores = $("#clear-scores");
+  if (clearScores) clearScores.disabled = !canEditScores;
   const scoreList = $("#score-list");
   if (scoreList) {
-    scoreList.innerHTML = sortedTeams().map((team, index) => `
-      <tr class="score-row" style="--team-color: ${team.color}; animation-delay: ${index * 35}ms">
-        <td><span class="rank-number ${index === 0 && state.teams.length ? "is-first" : ""}">${String(index + 1).padStart(2, "0")}</span></td>
-        <td><span class="score-team-cell">${teamLogoMarkup(team, "score-team-logo") || `<span class="score-dot"></span>`}<span class="score-team-name">${escapeHtml(team.name)}</span></span></td>
-        <td><span class="score-round-points">${team.roundScores[state.roundNumber - 1]}</span></td>
-        <td><span class="score-points">${team.score}</span></td>
-        <td><span class="score-actions">
-          <button class="score-award-button" type="button" data-award="${escapeHtml(team.id)}" data-award-type="question" ${canEditScores ? "" : "disabled"}>Question</button>
-          <button class="score-award-button is-bonus" type="button" data-award="${escapeHtml(team.id)}" data-award-type="bonus" ${canEditScores ? "" : "disabled"}>Bonus</button>
-        </span></td>
+    scoreList.innerHTML = state.teams.map((team, index) => `
+      <tr class="score-row" style="animation-delay: ${index * 35}ms">
+        <td><span class="score-team-cell">${teamLogoMarkup(team, "score-team-logo") || `<span class="score-dot" style="--team-color: ${team.color}"></span>`}<span class="score-team-name">${escapeHtml(team.name)}</span></span></td>
+        <td><input class="score-total-input" type="number" min="0" max="9007199254740991" step="1" value="${team.score}" data-total-score="${escapeHtml(team.id)}" aria-label="Current total score for ${escapeHtml(team.name)}" ${canEditScores ? "" : "disabled"} /></td>
       </tr>
     `).join("");
     const emptyState = $("#empty-state");
@@ -668,9 +663,9 @@ function bindAdminControls() {
     }));
     $("#question-duration").addEventListener("change", (event) => {
       const duration = Number(event.target.value);
-      if (!Number.isInteger(duration) || duration < 30 || duration > 60) {
+      if (!Number.isSafeInteger(duration) || duration < 1 || !event.target.checkValidity()) {
         event.target.value = String(state.questionTimerDuration);
-        showToast("Choose a question time between 30 and 60 seconds.");
+        showToast("Enter a positive whole number of seconds.");
         return;
       }
       updateState((nextState) => {
@@ -689,9 +684,10 @@ function bindAdminControls() {
     }));
     $("#round-select").addEventListener("change", (event) => {
       const roundNumber = Number(event.target.value);
-      if (!Number.isInteger(roundNumber) || roundNumber < 1 || roundNumber > 4) {
+      const roundCount = state.roundCount;
+      if (!Number.isInteger(roundNumber) || roundNumber < 1 || roundNumber > roundCount) {
         event.target.value = String(state.roundNumber);
-        showToast("Choose a valid round from 1 to 4.");
+        showToast("Choose an available round.");
         return;
       }
       updateState((nextState) => {
@@ -706,11 +702,34 @@ function bindAdminControls() {
     });
   }
 
+  const addRoundButton = $("#add-round");
+  if (addRoundButton) addRoundButton.addEventListener("click", () => {
+    const roundCount = state.roundCount;
+    if (!hasLoadedState || !socket?.connected) {
+      showToast("Wait for the LIVE connection before adding a round.");
+      return;
+    }
+    if (roundCount >= MAX_ROUNDS) {
+      showToast(`The event has reached the ${MAX_ROUNDS}-round limit.`);
+      return;
+    }
+    updateState((nextState) => {
+      nextState.roundCount += 1;
+      nextState.roundNumber = roundCount + 1;
+      nextState.timerMode = "question";
+      nextState.timerDuration = nextState.questionTimerDuration;
+      nextState.timerRemaining = nextState.questionTimerDuration;
+      nextState.timerEndsAt = null;
+    });
+    showToast(`Round ${roundCount + 1} added for the tiebreaker.`);
+  });
+
   const reset = $("#reset-event");
   if (reset) reset.addEventListener("click", () => {
     setState({
       ...initialState,
-      teams: initialState.teams.map((team) => ({ ...team, score: 0, roundScores: [0, 0, 0, 0] })),
+      roundCount: INITIAL_ROUND_COUNT,
+      teams: initialState.teams.map((team) => ({ ...team, score: 0 })),
     });
     showToast("The event is reset and ready to go.");
   });
@@ -721,7 +740,6 @@ function bindAdminControls() {
     updateState((nextState) => {
       nextState.teams.forEach((team) => {
         team.score = 0;
-        team.roundScores = [0, 0, 0, 0];
       });
       nextState.timerMode = "question";
       nextState.timerDuration = nextState.questionTimerDuration;
@@ -796,39 +814,29 @@ function bindAdminControls() {
 
 function bindScoreControls() {
   const scoreList = $("#score-list");
-  if (scoreList) scoreList.addEventListener("click", (event) => {
-    const awardButton = event.target.closest("[data-award]");
-    if (awardButton) {
-      if (!hasLoadedState || !socket?.connected) {
-        showToast("Wait for the LIVE connection before awarding points.");
-        return;
-      }
-      const inputSelector = awardButton.dataset.awardType === "bonus" ? "#bonus-points" : "#question-points";
-      const pointsInput = $(inputSelector);
-      const points = pointsInput.valueAsNumber;
-      if (!pointsInput.checkValidity() || !Number.isSafeInteger(points) || points < 1 || points > 1_000_000) {
-        pointsInput.focus();
-        pointsInput.reportValidity();
-        showToast("Enter a whole point value between 1 and 1,000,000.");
-        return;
-      }
-      const team = state.teams.find((item) => item.id === awardButton.dataset.award);
-      const roundIndex = state.roundNumber - 1;
-      if (!team || !Number.isSafeInteger(team.score + points) ||
-          !Number.isSafeInteger(team.roundScores[roundIndex] + points)) {
-        showToast("That award would exceed the maximum supported score.");
-        return;
-      }
-      updateState((nextState) => {
-        const team = nextState.teams.find((item) => item.id === awardButton.dataset.award);
-        if (team) {
-          team.score += points;
-          team.roundScores[roundIndex] += points;
-        }
-      });
-      if (team) showToast(`${points} ${points === 1 ? "point" : "points"} awarded to ${team.name} for ${awardButton.dataset.awardType === "bonus" ? "a bonus answer" : "the question"}.`);
+  if (scoreList) scoreList.addEventListener("change", (event) => {
+    const input = event.target.closest("[data-total-score]");
+    if (!input) return;
+    if (!hasLoadedState || !socket?.connected) {
+      showToast("Wait for the LIVE connection before changing scores.");
+      renderScores();
       return;
     }
+    const score = input.valueAsNumber;
+    if (!input.checkValidity() || !Number.isSafeInteger(score) || score < 0) {
+      input.focus();
+      input.reportValidity();
+      showToast("Enter a whole-number total score of zero or more.");
+      return;
+    }
+    const teamId = input.dataset.totalScore;
+    const team = state.teams.find((item) => item.id === teamId);
+    if (!team) return;
+    updateState((nextState) => {
+      const nextTeam = nextState.teams.find((item) => item.id === teamId);
+      if (nextTeam) nextTeam.score = score;
+    });
+    showToast(`${team.name}'s total updated to ${score}.`);
   });
 
   ["#clear-scores", "#clear-all-scores"].forEach((selector) => {
@@ -843,7 +851,6 @@ function bindScoreControls() {
       updateState((nextState) => {
         nextState.teams.forEach((team) => {
           team.score = 0;
-          team.roundScores = [0, 0, 0, 0];
         });
       });
       showToast("All scores are back to zero.");

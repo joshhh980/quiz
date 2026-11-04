@@ -27,15 +27,11 @@
           <a class="button button-quiet projector-shortcut" href="/projector">Open projector ↗</a>
         </section>
         <section class="panel score-entry-panel">
-          <div class="section-heading"><div><p class="eyebrow">THE LEADERBOARD</p><h2>Score sheet</h2></div><div class="score-heading-status"><span class="round-chip" id="score-round-label">ROUND 1 OF 4</span><span class="live-label"><span class="live-dot"></span> LIVE</span></div></div>
-          <div class="score-award-controls">
-            <label for="question-points"><span>Question points</span><input id="question-points" type="number" min="1" max="1000000" step="1" value="1" required disabled /></label>
-            <label for="bonus-points"><span>Bonus points</span><input id="bonus-points" type="number" min="1" max="1000000" step="1" value="1" required disabled /></label>
-            <p>Award the selected value to a team. Points count toward this round and the total score.</p>
-          </div>
+          <div class="section-heading"><div><p class="eyebrow">CURRENT RESULTS</p><h2>Enter each team’s total</h2></div><span class="live-label"><span class="live-dot"></span> LIVE</span></div>
+          <p class="score-entry-hint">Enter the current total for each team. Scores are independent of the selected round and sync when you leave a field.</p>
           <div class="score-table-wrap">
             <table class="score-table score-entry-table">
-              <thead><tr><th scope="col">RANK</th><th scope="col">TEAM</th><th scope="col"><span id="score-round-heading">ROUND 1</span></th><th scope="col">TOTAL</th><th scope="col"><span class="sr-only">Award points</span></th></tr></thead>
+              <thead><tr><th scope="col">TEAM</th><th scope="col">CURRENT TOTAL</th></tr></thead>
               <tbody id="score-list"></tbody>
             </table>
             <div class="empty-state hidden" id="empty-state">Teams are configured in <code>data/quiz-content.json</code>.</div>

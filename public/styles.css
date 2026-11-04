@@ -65,6 +65,7 @@ h1 { margin-bottom: 7px; font-family: var(--display); font-size: clamp(32px, 4vw
 .timer-heading-controls { display: flex; align-items: center; gap: 9px; }
 .round-control { display: flex; align-items: center; gap: 7px; color: #667382; font-family: var(--mono); font-size: 8px; letter-spacing: .08em; }
 .round-control select { padding: 5px 7px; border: 1px solid var(--line); border-radius: 20px; color: var(--blue); background: #f3f6f9; font-family: var(--mono); font-size: 9px; cursor: pointer; }
+.add-round-button { height: 29px; min-width: 0; padding: 0 8px; font-size: 9px; white-space: nowrap; }
 .timer-display { display: flex; justify-content: center; align-items: center; margin: 21px auto 13px; font-family: var(--display); font-size: 57px; font-variant-numeric: tabular-nums; font-weight: 500; letter-spacing: -3px; line-height: 1; }
 .timer-display span { padding: 0 5px; color: var(--green); animation: colon-blink 1s step-end infinite; }
 .timer-display.is-urgent { color: #b93828; animation: timer-pulse .7s ease-in-out infinite alternate; }
@@ -124,10 +125,7 @@ h1 { margin-bottom: 7px; font-family: var(--display); font-size: clamp(32px, 4vw
 .score-table-wrap { min-height: 258px; overflow-x: auto; }
 .score-heading-status { display: flex; align-items: center; gap: 12px; }
 .score-heading-status .round-chip { margin: 0; color: var(--blue); background: #fff; }
-.score-award-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin: 0 0 18px; padding: 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel-raised); }
-.score-award-controls label { display: grid; gap: 5px; color: #46515d; font-family: var(--mono); font-size: 9px; }
-.score-award-controls input { width: 120px; height: 36px; padding: 0 9px; border: 1px solid var(--line); border-radius: 6px; color: var(--text); background: #fff; font-family: var(--mono); font-size: 14px; }
-.score-award-controls p { flex: 1 1 190px; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.score-entry-hint { margin: -5px 0 18px; color: var(--muted); font-size: 11px; }
 .score-table { width: 100%; border-collapse: collapse; text-align: left; }
 .score-table th { padding: 0 5px 10px; border-bottom: 1px solid var(--line); color: #667382; font-size: 8px; font-weight: 400; }
 .score-table th:first-child, .score-table td:first-child { width: 39px; padding-left: 2px; }
@@ -139,13 +137,7 @@ h1 { margin-bottom: 7px; font-family: var(--display); font-size: clamp(32px, 4vw
 .score-team-cell { display: flex; align-items: center; gap: 8px; }
 .score-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--team-color); }
 .score-team-name { max-width: 115px; overflow: hidden; color: #26323e; font-size: 10px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
-.score-points { color: #17212b; font-family: var(--display); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.score-round-points { color: var(--green); font-family: var(--display); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.score-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 5px; }
-.score-award-button { min-height: 29px; padding: 0 8px; border: 1px solid var(--blue); border-radius: 5px; color: #fff; background: var(--blue); font-size: 9px; font-weight: 600; cursor: pointer; }
-.score-award-button:hover { background: #123f8e; }
-.score-award-button.is-bonus { border-color: var(--green); color: var(--green); background: #fff; }
-.score-award-button.is-bonus:hover { color: #fff; background: var(--green); }
+
 .score-button { display: grid; width: 23px; height: 23px; place-items: center; border: 1px solid var(--line); border-radius: 5px; color: #46515d; background: #f3f6f9; font-size: 15px; line-height: 1; cursor: pointer; transition: color .18s, border-color .18s, background .18s; }
 .score-button:hover { border-color: var(--green); color: var(--green); background: color-mix(in srgb, var(--blue), transparent 78%); }
 .score-button.is-minus { font-size: 17px; }
@@ -230,7 +222,6 @@ h1 { margin-bottom: 7px; font-family: var(--display); font-size: clamp(32px, 4vw
 .projector-round-display { display: flex; min-width: 0; flex-direction: column; align-items: center; justify-content: center; }
 .projector-round-display .eyebrow { margin-bottom: 4px; color: var(--muted); text-align: center; }
 .projector-round-number { display: flex; align-items: baseline; justify-content: center; color: var(--blue); font-family: var(--display); font-size: clamp(72px, 13vw, 132px); font-variant-numeric: tabular-nums; font-weight: 600; letter-spacing: -5px; line-height: 1; }
-.projector-round-total { margin-left: 5px; color: var(--green); font-size: .34em; font-weight: 500; letter-spacing: -1px; }
 .projector-round-caption { margin-top: 9px; color: var(--muted); font-family: var(--mono); font-size: 10px; letter-spacing: .12em; }
 .projector-clock-panel > .eyebrow { margin-bottom: 5px; text-align: center; }
 .projector-clock { min-width: 0; display: flex; flex-direction: column; align-items: stretch; }
@@ -265,11 +256,14 @@ h1 { margin-bottom: 7px; font-family: var(--display); font-size: clamp(32px, 4vw
 .projector-qr-content > p:last-child { margin: 16px 0 0; color: var(--muted); font-size: 16px; }
 .score-entry-panel { padding: 23px 25px 19px; }
 .score-entry-panel .score-table-wrap { min-height: 0; }
-.score-entry-table { min-width: 610px; }
+.score-entry-table { min-width: 0; }
 .score-entry-table td { height: 58px; }
-.score-entry-table th:last-child, .score-entry-table td:last-child { width: 135px; text-align: right; }
+.score-entry-table th:first-child, .score-entry-table td:first-child { width: auto; padding-left: 2px; }
+.score-entry-table th:last-child, .score-entry-table td:last-child { width: 180px; text-align: right; }
 .score-entry-table .score-team-name { max-width: none; font-size: 12px; }
-.score-entry-table .score-points { font-size: 17px; }
+.score-total-input { width: 150px; max-width: 100%; height: 38px; padding: 0 9px; border: 1px solid var(--line); border-radius: 6px; color: var(--text); background: #fff; font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; text-align: right; }
+.score-total-input:focus { border-color: var(--green); outline: 2px solid color-mix(in srgb, var(--green), transparent 80%); }
+.score-total-input:disabled { color: var(--muted); background: var(--panel-raised); }
 .projector-shortcut { align-self: flex-end; margin-bottom: 2px; text-decoration: none; }
 
 .projector-team-intro { position: fixed; z-index: 25; inset: 0; display: grid; overflow-y: auto; place-items: center; padding: 22px clamp(18px, 5vw, 64px); background: var(--background); animation: reveal-in .25s ease both; }
@@ -365,11 +359,10 @@ h1 { margin-bottom: 7px; font-family: var(--display); font-size: clamp(32px, 4vw
   .projector-actions { margin-left: auto; }
   .admin-team-stage .team-list { grid-template-columns: 1fr 1fr; }
   .score-entry-panel { padding: 17px 11px 14px; }
-  .score-entry-table th:first-child, .score-entry-table td:first-child { width: 32px; }
+  .score-entry-table th:last-child, .score-entry-table td:last-child { width: 125px; }
   .score-entry-table td { padding: 0 3px; }
   .score-entry-table .score-team-cell { gap: 5px; }
   .score-entry-table .score-team-name { max-width: 100px; font-size: 10px; }
-  .score-entry-table .score-actions { gap: 3px; }
   .projector-score-list { grid-template-columns: 1fr; }
   .projector-score-row { min-height: 66px; gap: 10px; }
   .projector-team-logo { width: 42px; height: 42px; }
