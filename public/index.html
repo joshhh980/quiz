@@ -74,7 +74,10 @@
           <article class="panel teams-panel admin-teams-panel">
             <div class="section-heading">
               <div><p class="eyebrow">01 / IN THE RUNNING</p><h2>Meet the teams <span class="count-badge" id="team-count">0</span></h2></div>
-              <button class="button button-primary" id="team-intro-open" type="button" disabled>✳ Introduce teams on projector</button>
+              <div class="teams-heading-actions">
+                <a class="button button-quiet" href="/api/teams-presentation.pptx">Download team slides</a>
+                <button class="button button-primary" id="team-intro-open" type="button" disabled>✳ Introduce teams on projector</button>
+              </div>
             </div>
             <div class="team-stage admin-team-stage">
               <div class="team-list" id="team-list"></div>
@@ -104,6 +107,7 @@
             <a class="shortcut-card" href="/qr"><span class="shortcut-number">03</span><span><strong>Projector QR code</strong><small>Show a scannable projector link</small></span><span class="shortcut-arrow">↗</span></a>
             <a class="shortcut-card" href="/guest-of-honor"><span class="shortcut-number">04</span><span><strong>Guest of Honor</strong><small>Open the recognition display</small></span><span class="shortcut-arrow">↗</span></a>
             <button class="button button-quiet projector-qr-toggle" id="projector-qr-toggle" type="button" aria-pressed="false">Show projector QR</button>
+            <button class="button button-quiet clear-all-scores-button" id="clear-all-scores" type="button" disabled>Clear all scores</button>
             <button class="button button-quiet reset-scores-timer-button" id="reset-scores-timer" type="button" disabled>Reset scores &amp; timer</button>
             <button class="text-button reset-event-button" id="reset-event" type="button">Start a new event from round 1 <span aria-hidden="true">↗</span></button>
           </article>

@@ -8,7 +8,13 @@
   },
   "dependencies": {
     "pg": "^8.23.1",
+    "pptxgenjs": "^4.0.1",
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.4"
+  },
+  "overrides": {
+    "pptxgenjs": {
+      "image-size": "^2.0.4"
+    }
   }
 }

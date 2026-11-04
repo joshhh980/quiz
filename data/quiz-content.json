@@ -30,14 +30,14 @@
     "scoreSubtitle": "Scores update live on the projector display."
   },
   "teams": [
-    {
-      "id": "team-1",
-      "name": "OWASS",
+        {
+      "id": "team-3",
+      "name": "Ibadur Rahman",
       "score": 0,
-      "color": "#4ade80",
-      "logo": "/team-logos/owass.png"
+      "color": "#86efac",
+      "logo": "/team-logos/IBASS.jpeg"
     },
-    {
+        {
       "id": "team-2",
       "name": "Afua Kobi",
       "score": 0,
@@ -45,11 +45,11 @@
       "logo": "/team-logos/ak.png"
     },
     {
-      "id": "team-3",
-      "name": "Ibadur Rahman",
+      "id": "team-1",
+      "name": "OWASS",
       "score": 0,
-      "color": "#86efac",
-      "logo": "/team-logos/IBASS.jpeg"
+      "color": "#4ade80",
+      "logo": "/team-logos/owass.png"
     }
   ]
 }

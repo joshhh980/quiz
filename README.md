@@ -25,6 +25,8 @@ QR overlay encode its `/projector` URL.
 The admin control board can announce a selected team as the winner on the
 projector. The `/guest-of-honor` page is a standalone recognition display; its
 current title and guest details are placeholders.
+Use **Download team slides** on the admin control board to download a widescreen
+PowerPoint with one branded introduction slide per team.
 Use **Reset scores & timer** on the admin page to clear test scores and stop
 and reset the question timer without changing the selected round.
 

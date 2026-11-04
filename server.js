@@ -5,6 +5,7 @@ const path = require("node:path");
 const { Server } = require("socket.io");
 const { Pool } = require("pg");
 const QRCode = require("qrcode");
+const PptxGenJS = require("pptxgenjs");
 
 try {
   process.loadEnvFile(path.join(__dirname, ".env"));
@@ -78,7 +79,113 @@ function isAuthorized(authorization) {
 
 function isProtectedPath(pathname) {
   const normalizedPath = pathname.replace(/\/+$/, "") || "/";
-  return normalizedPath === "/" || normalizedPath === "/admin" || normalizedPath === "/scores";
+  return normalizedPath === "/" || normalizedPath === "/admin" || normalizedPath === "/scores" ||
+    normalizedPath === "/api/teams-presentation.pptx";
+}
+
+async function createTeamsPresentation() {
+  const presentation = new PptxGenJS();
+  presentation.layout = "LAYOUT_WIDE";
+  presentation.author = "Quiz Night";
+  presentation.subject = "Quiz team introductions";
+  presentation.title = `${content.texts.eventName} — Teams`;
+  presentation.theme = {
+    headFontFace: "Aptos Display",
+    bodyFontFace: "Aptos",
+    lang: "en-US",
+  };
+
+  for (const [index, team] of state.teams.entries()) {
+    const slide = presentation.addSlide();
+    const teamColor = team.color.slice(1).toUpperCase();
+    slide.background = { color: "012B72" };
+    slide.addShape(presentation.ShapeType.rect, {
+      x: 0,
+      y: 0,
+      w: 0.18,
+      h: 7.5,
+      line: { color: teamColor, transparency: 100 },
+      fill: { color: teamColor },
+    });
+    slide.addText(content.texts.eventName.toUpperCase(), {
+      x: 0.7,
+      y: 0.55,
+      w: 11.9,
+      h: 0.35,
+      color: "D8E2F0",
+      fontFace: "Aptos",
+      fontSize: 13,
+      charSpacing: 2,
+      margin: 0,
+      breakLine: false,
+      align: "center",
+    });
+    slide.addShape(presentation.ShapeType.line, {
+      x: 5.3,
+      y: 1.15,
+      w: 2.73,
+      h: 0,
+      line: { color: teamColor, width: 1.5 },
+    });
+    slide.addText(`TEAM ${String(index + 1).padStart(2, "0")}`, {
+      x: 0.7,
+      y: 1.5,
+      w: 11.9,
+      h: 0.4,
+      color: teamColor,
+      fontFace: "Aptos",
+      fontSize: 17,
+      bold: true,
+      charSpacing: 3,
+      margin: 0,
+      align: "center",
+    });
+    if (team.logo) {
+      const logoPath = path.join(publicDirectory, "team-logos", path.basename(team.logo));
+      const logo = await readFile(logoPath);
+      slide.addImage({
+        data: `data:${({
+          ".svg": "image/svg+xml",
+          ".png": "image/png",
+          ".jpg": "image/jpeg",
+          ".jpeg": "image/jpeg",
+          ".webp": "image/webp",
+        })[path.extname(logoPath).toLowerCase()]};base64,${logo.toString("base64")}`,
+        x: 5.57,
+        y: 2.15,
+        w: 2.2,
+        h: 2.2,
+      });
+    }
+    slide.addText(team.name, {
+      x: 0.65,
+      y: team.logo ? 4.65 : 3.05,
+      w: 12.03,
+      h: 1.25,
+      color: "FFFFFF",
+      fontFace: "Aptos Display",
+      fontSize: team.name.length > 18 ? 42 : 54,
+      bold: true,
+      fit: "shrink",
+      margin: 0.05,
+      align: "center",
+      valign: "mid",
+    });
+    slide.addText(`${String(index + 1).padStart(2, "0")}  /  ${String(state.teams.length).padStart(2, "0")}`, {
+      x: 5.3,
+      y: 6.7,
+      w: 2.73,
+      h: 0.3,
+      color: "D8E2F0",
+      fontFace: "Aptos",
+      fontSize: 11,
+      charSpacing: 2,
+      margin: 0,
+      align: "center",
+    });
+  }
+
+  return presentation.write({ outputType: "nodebuffer" });
 }
 
 function acknowledgeUpdate(acknowledge, result) {
@@ -316,6 +423,28 @@ const server = http.createServer(async (request, response) => {
       "X-Content-Type-Options": "nosniff",
     });
     response.end(JSON.stringify(content));
+    return;
+  }
+
+  if (pathname === "/api/teams-presentation.pptx" && request.method === "GET") {
+    try {
+      const presentation = await createTeamsPresentation();
+      response.writeHead(200, {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "Content-Disposition": 'attachment; filename="quiz-teams.pptx"',
+        "Content-Length": presentation.length,
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+      });
+      response.end(presentation);
+    } catch (error) {
+      console.error("Could not generate team presentation:", error);
+      response.writeHead(500, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+      });
+      response.end("Unable to generate the team presentation.");
+    }
     return;
   }
 

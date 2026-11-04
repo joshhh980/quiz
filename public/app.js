@@ -523,7 +523,7 @@ function teamLogoMarkup(team, className) {
 
 function renderScores() {
   const canEditScores = hasLoadedState && Boolean(socket?.connected);
-  ["#question-points", "#bonus-points", "#clear-scores"]
+  ["#question-points", "#bonus-points", "#clear-scores", "#clear-all-scores"]
     .forEach((selector) => {
       const control = $(selector);
       if (control) control.disabled = !canEditScores;
@@ -831,20 +831,23 @@ function bindScoreControls() {
     }
   });
 
-  const clearScores = $("#clear-scores");
-  if (clearScores) clearScores.addEventListener("click", () => {
-    if (!hasLoadedState || !socket?.connected) {
-      showToast("Wait for the LIVE connection before clearing scores.");
-      return;
-    }
-    if (state.teams.length === 0) return;
-    updateState((nextState) => {
-      nextState.teams.forEach((team) => {
-        team.score = 0;
-        team.roundScores = [0, 0, 0, 0];
+  ["#clear-scores", "#clear-all-scores"].forEach((selector) => {
+    const clearScores = $(selector);
+    if (!clearScores) return;
+    clearScores.addEventListener("click", () => {
+      if (!hasLoadedState || !socket?.connected) {
+        showToast("Wait for the LIVE connection before clearing scores.");
+        return;
+      }
+      if (state.teams.length === 0) return;
+      updateState((nextState) => {
+        nextState.teams.forEach((team) => {
+          team.score = 0;
+          team.roundScores = [0, 0, 0, 0];
+        });
       });
+      showToast("All scores are back to zero.");
     });
-    showToast("All scores are back to zero.");
   });
 }
 

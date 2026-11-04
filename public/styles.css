@@ -89,6 +89,8 @@ h1 { margin-bottom: 7px; font-family: var(--display); font-size: clamp(32px, 4vw
 .lower-grid { align-items: stretch; margin-top: 16px; }
 .teams-panel, .scoreboard-panel { min-height: 365px; padding: 20px 21px 14px; }
 .section-heading { margin-bottom: 17px; }
+.teams-heading-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.teams-heading-actions a { text-decoration: none; }
 .count-badge { display: inline-grid; min-width: 20px; height: 20px; place-items: center; margin-left: 5px; padding: 0 5px; border-radius: 10px; color: var(--green); background: color-mix(in srgb, var(--blue), transparent 65%); font-family: var(--mono); font-size: 10px; vertical-align: 2px; }
 .shuffle-button { height: 30px; padding: 0 10px; font-size: 10px; }
 .shuffle-button span { color: var(--green); font-size: 14px; }
@@ -173,6 +175,7 @@ h1 { margin-bottom: 7px; font-family: var(--display); font-size: clamp(32px, 4vw
   .host-grid, .lower-grid { grid-template-columns: 1fr; gap: 12px; }
   .timer-panel { min-height: 245px; }
   .teams-panel, .scoreboard-panel { min-height: 0; }
+  .teams-heading-actions { justify-content: flex-start; }
   .team-stage { min-height: 219px; }
   .score-table-wrap { min-height: 0; }
 }
@@ -253,6 +256,7 @@ h1 { margin-bottom: 7px; font-family: var(--display); font-size: clamp(32px, 4vw
 .projector-scoreboard .empty-state { padding: 60px 10px; }
 .projector-shell .footer { padding-top: 17px; }
 .projector-qr-toggle { justify-content: flex-start; margin-top: 12px; }
+.clear-all-scores-button { justify-content: flex-start; margin-top: 8px; }
 .projector-qr-dialog { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: 24px; background: rgb(1 20 52 / 82%); animation: reveal-in .25s ease both; }
 .projector-qr-content { display: flex; width: min(520px, 100%); flex-direction: column; align-items: center; padding: clamp(24px, 5vw, 44px); border: 1px solid #d7dfe7; border-radius: 20px; background: #fff; box-shadow: 0 24px 80px rgb(0 0 0 / 28%); text-align: center; }
 .projector-qr-content .eyebrow { margin-bottom: 10px; color: var(--green); font-size: 12px; }
