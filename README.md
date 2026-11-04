@@ -13,11 +13,21 @@ QUIZ_AUTH_PASSWORD=replace-this-with-a-unique-password-of-at-least-8-characters
 The server loads `.env` automatically. Environment variables already set by
 the host take precedence over values in the file.
 
-Quiz state defaults to `.quiz-state.json` in the app directory. To keep it on a
-Render persistent disk, mount the disk (for example at `/var/data`) and set
-`QUIZ_STATE_FILE=/var/data/.quiz-state.json` in the service environment. A path
-outside the app directory alone is not persistent unless it is on a mounted
-persistent disk.
+When `DATABASE_URL` is set, quiz state is stored in PostgreSQL in the
+`quiz_state` table. Set it to Render Postgres's **internal** connection URL
+when the web service and database are in the same Render region. The app
+creates its table automatically. TLS is enabled by default for database
+connections; set `DATABASE_SSL=false` only when connecting to a local
+PostgreSQL instance without TLS.
+
+For Render, create a Postgres database and add its internal connection URL to
+the web service's `DATABASE_URL` environment variable. Free Render Postgres
+instances currently expire after 30 days, so export any scores you need to
+keep or upgrade the database before expiry.
+
+Without `DATABASE_URL`, quiz state falls back to `.quiz-state.json` in the app
+directory. To persist that file on Render instead, mount a disk (for example
+at `/var/data`) and set `QUIZ_STATE_FILE=/var/data/.quiz-state.json`.
 
 The shared HTTP Basic Auth credentials protect `/`, `/admin`, and `/scores`.
 The `/projector` and `/teams` displays remain public. State updates from

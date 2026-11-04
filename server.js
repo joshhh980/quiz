@@ -4,6 +4,7 @@ const { mkdir, readFile, writeFile } = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 const { Server } = require("socket.io");
+const { Pool } = require("pg");
 const QRCode = require("qrcode");
 
 try {
@@ -16,6 +17,17 @@ const publicDirectory = path.join(__dirname, "public");
 const teamLogoPattern = /^\/team-logos\/[a-z0-9-]+\.(?:svg|png|jpe?g|webp)$/i;
 const contentFile = path.join(__dirname, "data", "quiz-content.json");
 const stateFile = path.resolve(process.env.QUIZ_STATE_FILE || path.join(__dirname, ".quiz-state.json"));
+const databasePool = process.env.DATABASE_URL
+  ? new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false },
+    max: 1,
+    connectionTimeoutMillis: 10_000,
+  })
+  : null;
+databasePool?.on("error", (error) => {
+  console.error("Unexpected PostgreSQL pool error:", error);
+});
 const authUsername = process.env.QUIZ_AUTH_USERNAME ?? process.env.QUIZ_AUTH_USER;
 const authPassword = process.env.QUIZ_AUTH_PASSWORD;
 if (!authUsername || !authPassword || authUsername.includes(":") || authPassword.length < 8) {
@@ -111,7 +123,7 @@ function newGameState() {
   return {
     teams: content.teams.map((team, index) => ({
       ...team,
-      color: teamColors[index % teamColors.length],
+      color: content.theme.teamColors[index % content.theme.teamColors.length],
       logo: team.logo ?? null,
       roundScores: [0, 0, 0, 0],
     })),
@@ -146,10 +158,28 @@ async function restoreState() {
   if (!isValidContent(content)) throw new Error("Quiz content file has an invalid format.");
   teamColors = new Set(content.theme.teamColors);
   state = newGameState();
-  await mkdir(path.dirname(stateFile), { recursive: true });
 
-  try {
-    const savedState = JSON.parse(await readFile(stateFile, "utf8"));
+  let savedState;
+  if (databasePool) {
+    await databasePool.query(`
+      CREATE TABLE IF NOT EXISTS quiz_state (
+        id SMALLINT PRIMARY KEY CHECK (id = 1),
+        state JSONB NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    const result = await databasePool.query("SELECT state FROM quiz_state WHERE id = 1");
+    savedState = result.rows[0]?.state ?? null;
+  } else {
+    try {
+      savedState = JSON.parse(await readFile(stateFile, "utf8"));
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+      savedState = null;
+    }
+  }
+
+  if (savedState !== null) {
     if (!savedState || typeof savedState !== "object" || Array.isArray(savedState)) {
       throw new Error("Saved quiz state has an invalid format.");
     }
@@ -190,11 +220,24 @@ async function restoreState() {
       state.timerEndsAt = null;
     }
     if (!isValidState(state)) throw new Error("Saved quiz state has an invalid format.");
-    await writeFile(stateFile, JSON.stringify(serializeState(state)), "utf8");
-  } catch (error) {
-    if (error.code === "ENOENT") return;
-    throw error;
   }
+
+  await persistState(state);
+}
+
+async function persistState(value) {
+  const savedState = serializeState(value);
+  if (databasePool) {
+    await databasePool.query(
+      `INSERT INTO quiz_state (id, state, updated_at)
+       VALUES (1, $1::jsonb, NOW())
+       ON CONFLICT (id) DO UPDATE SET state = EXCLUDED.state, updated_at = NOW()`,
+      [JSON.stringify(savedState)],
+    );
+    return;
+  }
+  await mkdir(path.dirname(stateFile), { recursive: true });
+  await writeFile(stateFile, JSON.stringify(savedState), "utf8");
 }
 
 const stateReady = restoreState();
@@ -346,7 +389,7 @@ io.on("connection", (socket) => {
       }
 
       try {
-        await writeFile(stateFile, JSON.stringify(serializeState(nextState)), "utf8");
+        await persistState(nextState);
       } catch (error) {
         console.error("Could not save quiz state:", error);
         acknowledgeUpdate(acknowledge, { ok: false, error: "Unable to save quiz state." });
@@ -369,5 +412,6 @@ io.on("connection", (socket) => {
 
 const port = Number(process.env.PORT) || 3000;
 server.listen(port, () => {
-  console.log(`Quiz Night is running at http://localhost:${port}`);
+  const storage = databasePool ? "PostgreSQL" : "local JSON file";
+  console.log(`Quiz Night is running at http://localhost:${port} (${storage} state storage)`);
 });

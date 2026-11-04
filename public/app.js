@@ -87,6 +87,10 @@ function showToast(message) {
 }
 
 function setState(nextState, persist = true) {
+  if (persist && (!hasLoadedState || !socket?.connected)) {
+    showToast("Wait for the LIVE connection before making changes.");
+    return;
+  }
   state = nextState;
   render();
   if (persist) void saveState();
@@ -123,16 +127,23 @@ function applyServerState(payload) {
 function connectToGame() {
   socket = io();
   socket.on("connect", () => {
+    revision = -1;
+    hasLoadedState = false;
     announceSync("SYNCING");
     renderScores();
   });
   socket.on("disconnect", () => {
+    revision = -1;
+    hasLoadedState = false;
     announceSync("RECONNECTING");
     renderScores();
   });
   socket.on("connect_error", (error) => {
     console.error("Could not connect to quiz server:", error);
+    revision = -1;
+    hasLoadedState = false;
     announceSync("OFFLINE");
+    renderScores();
   });
   socket.on("game:error", (result) => {
     console.error("Quiz server error:", result.error);
