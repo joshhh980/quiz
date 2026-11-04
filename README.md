@@ -25,6 +25,8 @@ QR overlay encode its `/projector` URL.
 The admin control board can announce a selected team as the winner on the
 projector. The `/guest-of-honor` page is a standalone recognition display; its
 current title and guest details are placeholders.
+Use **Reset scores & timer** on the admin page to clear test scores and stop
+and reset the question timer without changing the selected round.
 
 When `DATABASE_URL` is set, quiz state is stored in PostgreSQL in the
 `quiz_state` table. Set it to Render Postgres's **internal** connection URL

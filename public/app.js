@@ -630,6 +630,8 @@ function render() {
   renderTimer();
   renderTeams();
   renderProjectorQr();
+  const resetScoresTimer = $("#reset-scores-timer");
+  if (resetScoresTimer) resetScoresTimer.disabled = !hasLoadedState || !socket?.connected;
 }
 
 function updateState(updater) {
@@ -708,9 +710,32 @@ function bindAdminControls() {
   if (reset) reset.addEventListener("click", () => {
     setState({
       ...initialState,
-      teams: initialState.teams.map((team) => ({ ...team, score: 0 })),
+      teams: initialState.teams.map((team) => ({ ...team, score: 0, roundScores: [0, 0, 0, 0] })),
     });
     showToast("The event is reset and ready to go.");
+  });
+
+  const resetScoresTimer = $("#reset-scores-timer");
+  if (resetScoresTimer) resetScoresTimer.addEventListener("click", () => {
+    if (!window.confirm("Reset all team scores and stop the timer? The current round will stay selected.")) return;
+    updateState((nextState) => {
+      nextState.teams.forEach((team) => {
+        team.score = 0;
+        team.roundScores = [0, 0, 0, 0];
+      });
+      nextState.timerMode = "question";
+      nextState.timerDuration = nextState.questionTimerDuration;
+      nextState.timerRemaining = nextState.questionTimerDuration;
+      nextState.timerEndsAt = null;
+      nextState.spotlightTeamId = null;
+      nextState.spotlightEndsAt = null;
+      nextState.projectorQrVisible = false;
+      nextState.teamIntroVisible = false;
+      nextState.teamIntroIndex = 0;
+      nextState.winnerVisible = false;
+      nextState.winnerTeamId = null;
+    });
+    showToast("Scores cleared and timer reset. The current round is unchanged.");
   });
 
   const projectorQrToggle = $("#projector-qr-toggle");
