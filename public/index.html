@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#eef2f6" />
+    <title>Quiz Night — Admin Control Board</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/socket.io/socket.io.js" defer></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body data-page="admin">
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="/admin" aria-label="Quiz Night admin">
+          <img src="/logo.svg" alt="Quiz Night" />
+        </a>
+        <nav class="section-nav" aria-label="Quiz sections">
+          <a class="nav-link is-active" href="/admin" aria-current="page">Control board</a>
+          <a class="nav-link" href="/projector">Projector</a>
+          <a class="nav-link" href="/scores">Score entry</a>
+        </nav>
+        <span class="sync-indicator"><span class="live-dot"></span><span data-sync-status>CONNECTING</span></span>
+      </header>
+
+      <main>
+        <section class="intro">
+          <div>
+            <p class="eyebrow" data-copy="adminEyebrow">ADMIN CONTROL BOARD</p>
+            <h1><span class="title-before" data-copy="adminTitleBefore">Run the</span> <span class="title-accent" data-copy="adminTitleAccent">show.</span></h1>
+            <p class="intro-copy" data-copy="adminSubtitle">Your controls stay in sync with the projector and score entry screens.</p>
+          </div>
+          <div class="round-chip"><span class="round-chip-dot"></span><span>LIVE GAME</span><span class="round-chip-divider">/</span><span id="admin-round-label">ROUND 1 OF 4</span></div>
+        </section>
+
+        <section class="admin-controls-grid" aria-label="Quiz controls">
+          <article class="panel timer-panel">
+            <div class="panel-heading">
+              <div><p class="eyebrow">01 / THE CLOCK</p><h2>Question timer</h2></div>
+              <div class="timer-heading-controls">
+                <label class="round-control" for="round-select">
+                  <span>ROUND</span>
+                  <select id="round-select" aria-label="Quiz round">
+                    <option value="1">1 / 4</option><option value="2">2 / 4</option><option value="3">3 / 4</option><option value="4">4 / 4</option>
+                  </select>
+                </label>
+                <span class="status-pill" id="timer-status">READY</span>
+              </div>
+            </div>
+            <p class="eyebrow timer-type-label" id="admin-timer-label">QUESTION TIMER</p>
+            <div class="timer-display" id="timer-display" role="timer" aria-label="1 minute 0 seconds">01<span>:</span>00</div>
+            <div class="timer-progress"><span id="timer-progress"></span></div>
+            <div class="timer-controls">
+              <button class="button button-primary" id="timer-toggle" type="button">
+                <svg class="play-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 9 6-9 6z" /></svg>
+                <svg class="pause-icon hidden" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4h3v12H6zm5 0h3v12h-3z" /></svg>
+                <span>Start timer</span>
+              </button>
+              <button class="button button-quiet" id="timer-reset" type="button">Reset</button>
+              <button class="button button-quiet bonus-timer-button" id="bonus-timer" type="button">Start bonus · 10s</button>
+              <label class="duration-control" for="question-duration">
+                <span>Question</span>
+                <input id="question-duration" type="number" min="30" max="60" step="1" value="60" aria-label="Question timer duration in seconds" />
+                <span>s</span>
+              </label>
+            </div>
+          </article>
+        </section>
+
+        <section class="lower-grid admin-lower-grid">
+          <article class="panel teams-panel admin-teams-panel">
+            <div class="section-heading">
+              <div><p class="eyebrow">01 / IN THE RUNNING</p><h2>Meet the teams <span class="count-badge" id="team-count">0</span></h2></div>
+              <a class="button button-primary" href="/teams">✳ Introduce teams</a>
+            </div>
+            <div class="team-stage admin-team-stage">
+              <div class="team-list" id="team-list"></div>
+            </div>
+          </article>
+          <article class="panel admin-shortcuts">
+            <p class="eyebrow">YOUR THREE SCREENS</p>
+            <a class="shortcut-card" href="/projector"><span class="shortcut-number">01</span><span><strong>Projector display</strong><small>Timer, teams and live leaderboard</small></span><span class="shortcut-arrow">↗</span></a>
+            <a class="shortcut-card" href="/scores"><span class="shortcut-number">02</span><span><strong>Score entry</strong><small>Record and validate team scores</small></span><span class="shortcut-arrow">↗</span></a>
+            <a class="shortcut-card" href="/teams"><span class="shortcut-number">03</span><span><strong>Team introductions</strong><small>Full-screen, one team at a time</small></span><span class="shortcut-arrow">↗</span></a>
+            <button class="button button-quiet projector-qr-toggle" id="projector-qr-toggle" type="button" aria-pressed="false">Show projector QR</button>
+            <button class="text-button reset-event-button" id="reset-event" type="button">Start a new event from round 1 <span aria-hidden="true">↗</span></button>
+          </article>
+        </section>
+
+        <footer class="footer"><span>ADMIN CONTROL BOARD</span><span>GOOD LUCK, EVERYONE <span class="footer-star">✳</span></span></footer>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

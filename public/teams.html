@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#eef2f6" />
+    <title>Meet the Teams — Quiz Night</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/socket.io/socket.io.js" defer></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body data-page="teams">
+    <main class="team-intro-page">
+      <header class="team-intro-header">
+        <a class="brand" href="/admin" aria-label="Return to control board"><img src="/logo.svg" alt="Quiz Night" /></a>
+        <a class="intro-exit" href="/projector">Back to projector <span aria-hidden="true">↗</span></a>
+      </header>
+      <section class="team-intro-content" aria-live="polite">
+        <p class="eyebrow team-intro-announcement" data-copy="teamIntroEyebrow">GIVE IT UP FOR...</p>
+        <div class="intro-team-stage">
+          <div class="intro-team-glow"></div>
+          <div class="intro-team-card" id="intro-team-card">
+            <span class="intro-team-number" id="intro-team-number">TEAM 01</span>
+            <span class="intro-team-avatar" id="intro-team-avatar"><span id="intro-team-initial">T</span></span>
+            <h1 id="intro-team-name">The Brainiacs</h1>
+            <p id="intro-team-caption" data-copy="teamIntroCaption">Are you ready to play?</p>
+          </div>
+          <div class="intro-empty hidden" id="intro-empty">Add some teams on the score entry screen first.</div>
+        </div>
+        <div class="intro-progress" id="intro-progress" aria-label="Team introduction progress"></div>
+        <div class="intro-controls">
+          <button class="round-button intro-nav-button" id="intro-previous" type="button" aria-label="Previous team">←</button>
+          <button class="button button-primary intro-play-button" id="intro-play" type="button"><span id="intro-play-label">Start introductions</span></button>
+          <button class="round-button intro-nav-button" id="intro-next" type="button" aria-label="Next team">→</button>
+        </div>
+        <button class="button button-quiet intro-applause-button" id="intro-applause-toggle" type="button" aria-pressed="false">Enable applause</button>
+        <p class="intro-hint" id="intro-hint" data-copy="teamIntroHint">Teams are introduced one at a time. Use the arrows to skip ahead.</p>
+      </section>
+      <footer class="team-intro-footer"><span>MAKE SOME NOISE</span><span id="intro-count">0 TEAMS</span></footer>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,55 @@
+{
+  "theme": {
+    "background": "#eef2f6",
+    "panel": "#ffffff",
+    "text": "#17212b",
+    "muted": "#667382",
+    "green": "#15803d",
+    "blue": "#012b72",
+    "teamColors": [
+      "#4ade80",
+      "#60a5fa",
+      "#86efac",
+      "#93c5fd",
+      "#22c55e",
+      "#3b82f6",
+      "#a7f3d0",
+      "#bfdbfe"
+    ]
+  },
+  "texts": {
+    "eventName": "NHIS InterSchool Quiz Competition",
+    "adminEyebrow": "ADMIN CONTROL BOARD",
+    "adminTitleBefore": "Run the",
+    "adminTitleAccent": "show.",
+    "adminSubtitle": "Your controls stay in sync with the projector and score entry screens.",
+    "projectorPrompt": "LOOK UP. CHEER LOUD.",
+    "teamIntroEyebrow": "GIVE IT UP FOR...",
+    "teamIntroCaption": "Are you ready to play?",
+    "teamIntroHint": "Teams are introduced one at a time. Use the arrows to skip ahead.",
+    "scoreSubtitle": "Scores update live on the projector display."
+  },
+  "teams": [
+    {
+      "id": "team-1",
+      "name": "OWASS",
+      "score": 0,
+      "color": "#4ade80",
+      "logo": "/team-logos/owass.png"
+    },
+    {
+      "id": "team-2",
+      "name": "Afua Kobi",
+      "score": 0,
+      "color": "#60a5fa",
+      "logo": "/team-logos/ak.png"
+    },
+    {
+      "id": "team-3",
+      "name": "Ibadur Rahman",
+      "score": 0,
+      "color": "#86efac",
+      "logo": "/team-logos/IBASS.jpeg"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#eef2f6" />
+    <title>Quiz Night — Projector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/socket.io/socket.io.js" defer></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body data-page="projector">
+    <div class="page-shell projector-shell">
+      <header class="topbar">
+        <a class="brand" href="/admin" aria-label="Quiz Night admin"><img src="/logo.svg" alt="Quiz Night" /></a>
+        <nav class="section-nav" aria-label="Quiz sections">
+          <a class="nav-link" href="/admin">Control board</a><a class="nav-link is-active" href="/projector" aria-current="page">Projector</a><a class="nav-link" href="/scores">Score entry</a>
+        </nav>
+        <div class="projector-actions"><span class="sync-indicator"><span class="live-dot"></span><span data-sync-status>CONNECTING</span></span><button class="button button-quiet sound-toggle" id="timer-sound-toggle" type="button" aria-pressed="false">Enable sound</button><button class="icon-button fullscreen-button" id="fullscreen-toggle" type="button" aria-label="Enter fullscreen" title="Enter fullscreen">⛶</button></div>
+      </header>
+      <main class="projector-main">
+        <section class="projector-topline"><p class="eyebrow" data-copy="eventName">FRIDAY TRIVIA</p><span class="live-label"><span class="live-dot"></span> LIVE GAME</span></section>
+        <p class="sr-only" id="timer-sound-status" aria-live="polite">Tap to enable the time-up sound.</p>
+        <section class="projector-clock-panel panel">
+          <div class="projector-round-display" aria-live="polite">
+            <span class="eyebrow">CURRENT ROUND</span>
+            <div class="projector-round-number"><span id="projector-round-number">1</span><span class="projector-round-total">/ 4</span></div>
+            <span class="projector-round-caption" id="projector-round-label">ROUND 1 OF 4</span>
+          </div>
+          <div class="projector-clock">
+            <span class="eyebrow timer-type-label" id="projector-timer-label">QUESTION TIMER</span>
+            <div class="timer-display" id="projector-timer" role="timer">01<span>:</span>00</div>
+            <div class="timer-progress"><span id="projector-progress"></span></div>
+            <span class="status-pill" id="projector-timer-status">READY</span>
+          </div>
+        </section>
+        <section class="projector-bottom">
+          <article class="panel projector-scoreboard projector-leaderboard">
+            <div class="section-heading">
+              <div><p class="eyebrow">LIVE LEADERBOARD</p><h2>Teams &amp; scores <span class="count-badge" id="projector-team-count">0</span></h2></div>
+              <a class="projector-intro-link" href="/teams">Meet the teams ↗</a>
+            </div>
+            <ol class="projector-score-list" id="projector-score-list"></ol>
+            <div class="empty-state hidden" id="projector-empty">Teams will appear here when the quiz begins.</div>
+            <div class="spotlight-overlay hidden" id="projector-spotlight"><span class="spotlight-kicker">UP NEXT</span><strong id="projector-spotlight-name"></strong><span class="spotlight-subtitle">Get ready to play</span></div>
+          </article>
+        </section>
+        <footer class="footer"><span data-copy="projectorPrompt">LOOK UP. THINK FAST.</span><span>SCORES UPDATE LIVE</span></footer>
+      </main>
+    </div>
+    <section class="projector-qr-dialog hidden" id="projector-qr-dialog" role="dialog" aria-modal="true" aria-labelledby="projector-qr-title" aria-hidden="true">
+      <div class="projector-qr-content">
+        <p class="eyebrow">JOIN THE LIVE DISPLAY</p>
+        <h2 id="projector-qr-title">Scan to follow along</h2>
+        <img src="/api/projector-qr.svg" alt="QR code to open the live projector display" />
+        <p>Open the live scores on your phone</p>
+      </div>
+    </section>
+  </body>
+</html>

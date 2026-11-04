@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#eef2f6" />
+    <title>Quiz Night — Score Entry</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/socket.io/socket.io.js" defer></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body data-page="scores">
+    <div class="page-shell scores-shell">
+      <header class="topbar">
+        <a class="brand" href="/admin" aria-label="Quiz Night admin"><img src="/logo.svg" alt="Quiz Night" /></a>
+        <nav class="section-nav" aria-label="Quiz sections">
+          <a class="nav-link" href="/admin">Control board</a><a class="nav-link" href="/projector">Projector</a><a class="nav-link is-active" href="/scores" aria-current="page">Score entry</a>
+        </nav>
+        <span class="sync-indicator"><span class="live-dot"></span><span data-sync-status>CONNECTING</span></span>
+      </header>
+      <main>
+        <section class="intro">
+          <div><p class="eyebrow">SCORE ENTRY</p><h1>Keep score. <span>Keep it close.</span></h1><p class="intro-copy" data-copy="scoreSubtitle">Scores update live on the projector display.</p></div>
+          <a class="button button-quiet projector-shortcut" href="/projector">Open projector ↗</a>
+        </section>
+        <section class="panel score-entry-panel">
+          <div class="section-heading"><div><p class="eyebrow">THE LEADERBOARD</p><h2>Score sheet</h2></div><div class="score-heading-status"><span class="round-chip" id="score-round-label">ROUND 1 OF 4</span><span class="live-label"><span class="live-dot"></span> LIVE</span></div></div>
+          <div class="score-award-controls">
+            <label for="question-points"><span>Question points</span><input id="question-points" type="number" min="1" max="1000000" step="1" value="1" required disabled /></label>
+            <label for="bonus-points"><span>Bonus points</span><input id="bonus-points" type="number" min="1" max="1000000" step="1" value="1" required disabled /></label>
+            <p>Award the selected value to a team. Points count toward this round and the total score.</p>
+          </div>
+          <div class="score-table-wrap">
+            <table class="score-table score-entry-table">
+              <thead><tr><th scope="col">RANK</th><th scope="col">TEAM</th><th scope="col"><span id="score-round-heading">ROUND 1</span></th><th scope="col">TOTAL</th><th scope="col"><span class="sr-only">Award points</span></th></tr></thead>
+              <tbody id="score-list"></tbody>
+            </table>
+            <div class="empty-state hidden" id="empty-state">Teams are configured in <code>data/quiz-content.json</code>.</div>
+          </div>
+          <div class="scoreboard-footer"><span id="score-summary">0 teams playing</span><button class="text-button" id="clear-scores" type="button" disabled>Clear scores <span aria-hidden="true">↗</span></button></div>
+          <p class="content-file-hint">Set team names and logo paths in <code>data/quiz-content.json</code>; keep logo images in <code>public/team-logos/</code>.</p>
+        </section>
+        <footer class="footer"><span>SCORE ENTRY</span><span>EVERY POINT COUNTS <span class="footer-star">✳</span></span></footer>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
