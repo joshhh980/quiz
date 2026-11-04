@@ -40,7 +40,6 @@ const files = {
   "/admin": { name: "index.html", type: "text/html; charset=utf-8" },
   "/projector": { name: "projector.html", type: "text/html; charset=utf-8" },
   "/scores": { name: "scores.html", type: "text/html; charset=utf-8" },
-  "/teams": { name: "teams.html", type: "text/html; charset=utf-8" },
   "/styles.css": { name: "styles.css", type: "text/css; charset=utf-8" },
   "/app.js": { name: "app.js", type: "text/javascript; charset=utf-8" },
   "/logo.svg": { name: "logo.png", type: "image/png; charset=utf-8" },
@@ -136,6 +135,8 @@ function newGameState() {
     spotlightTeamId: null,
     spotlightEndsAt: null,
     projectorQrVisible: false,
+    teamIntroVisible: false,
+    teamIntroIndex: 0,
   };
 }
 
@@ -202,6 +203,8 @@ async function restoreState() {
       spotlightTeamId: savedState.spotlightTeamId ?? null,
       spotlightEndsAt: savedState.spotlightEndsAt ?? null,
       projectorQrVisible: savedState.projectorQrVisible ?? false,
+      teamIntroVisible: savedState.teamIntroVisible ?? false,
+      teamIntroIndex: savedState.teamIntroIndex ?? 0,
       teams: [
         ...content.teams.map((team, index) => ({
           ...team,
@@ -266,7 +269,10 @@ function isValidState(value) {
     (value.timerEndsAt === null || Number.isFinite(value.timerEndsAt)) &&
     (value.spotlightTeamId === null || typeof value.spotlightTeamId === "string") &&
     (value.spotlightEndsAt === null || Number.isFinite(value.spotlightEndsAt)) &&
-    typeof value.projectorQrVisible === "boolean";
+    typeof value.projectorQrVisible === "boolean" &&
+    typeof value.teamIntroVisible === "boolean" &&
+    Number.isInteger(value.teamIntroIndex) && value.teamIntroIndex >= 0 &&
+    value.teamIntroIndex < value.teams.length;
 }
 
 const server = http.createServer(async (request, response) => {
@@ -280,6 +286,12 @@ const server = http.createServer(async (request, response) => {
   }
 
   const pathname = new URL(request.url, "http://localhost").pathname;
+
+  if (pathname === "/teams" && request.method === "GET") {
+    response.writeHead(302, { Location: "/projector", "Cache-Control": "no-store" });
+    response.end();
+    return;
+  }
 
   if (isProtectedPath(pathname) && !isAuthorized(request.headers.authorization)) {
     response.writeHead(401, {

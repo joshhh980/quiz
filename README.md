@@ -30,7 +30,9 @@ directory. To persist that file on Render instead, mount a disk (for example
 at `/var/data`) and set `QUIZ_STATE_FILE=/var/data/.quiz-state.json`.
 
 The shared HTTP Basic Auth credentials protect `/`, `/admin`, and `/scores`.
-The `/projector` and `/teams` displays remain public. State updates from
+The `/projector` display remains public. Team introductions are shown as a
+full-screen overlay on that display and are controlled from the admin page.
+The legacy `/teams` URL redirects to `/projector`. State updates from
 unauthenticated Socket.IO clients are rejected.
 
 Use HTTPS when hosting the app outside a trusted local network. Basic Auth

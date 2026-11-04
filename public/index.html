@@ -74,17 +74,25 @@
           <article class="panel teams-panel admin-teams-panel">
             <div class="section-heading">
               <div><p class="eyebrow">01 / IN THE RUNNING</p><h2>Meet the teams <span class="count-badge" id="team-count">0</span></h2></div>
-              <a class="button button-primary" href="/teams">✳ Introduce teams</a>
+              <button class="button button-primary" id="team-intro-open" type="button" disabled>✳ Introduce teams on projector</button>
             </div>
             <div class="team-stage admin-team-stage">
               <div class="team-list" id="team-list"></div>
             </div>
+            <div class="team-intro-admin-controls">
+              <div class="team-intro-admin-navigation hidden" id="team-intro-admin-navigation">
+                <button class="button button-quiet" id="team-intro-previous" type="button" aria-label="Previous team" disabled>← Previous</button>
+                <span id="team-intro-admin-position">TEAM 1 OF 1</span>
+                <button class="button button-primary" id="team-intro-next" type="button" disabled>Next team →</button>
+                <button class="text-button" id="team-intro-close" type="button" disabled>Finish introductions</button>
+              </div>
+              <p class="team-intro-admin-hint" id="team-intro-admin-hint">Open the team introductions on the projector when you are ready.</p>
+            </div>
           </article>
           <article class="panel admin-shortcuts">
-            <p class="eyebrow">YOUR THREE SCREENS</p>
+            <p class="eyebrow">QUICK LINKS</p>
             <a class="shortcut-card" href="/projector"><span class="shortcut-number">01</span><span><strong>Projector display</strong><small>Timer, teams and live leaderboard</small></span><span class="shortcut-arrow">↗</span></a>
             <a class="shortcut-card" href="/scores"><span class="shortcut-number">02</span><span><strong>Score entry</strong><small>Record and validate team scores</small></span><span class="shortcut-arrow">↗</span></a>
-            <a class="shortcut-card" href="/teams"><span class="shortcut-number">03</span><span><strong>Team introductions</strong><small>Full-screen, one team at a time</small></span><span class="shortcut-arrow">↗</span></a>
             <button class="button button-quiet projector-qr-toggle" id="projector-qr-toggle" type="button" aria-pressed="false">Show projector QR</button>
             <button class="text-button reset-event-button" id="reset-event" type="button">Start a new event from round 1 <span aria-hidden="true">↗</span></button>
           </article>

@@ -10,12 +10,12 @@ let revision = -1;
 let hasLoadedState = false;
 let socket;
 let toastTimeout = null;
-let introCursor = 0;
-let introInterval = null;
-let introStartTimeout = null;
 let timerAudioContext = null;
 let applauseAudioContext = null;
 let applauseEnabled = false;
+let confettiAnimationFrame = null;
+let lastIntroVisible = false;
+let lastIntroIndex = -1;
 let lastTimerObservation = null;
 let timerSoundEnabled = false;
 let roundSpeechEnabled = false;
@@ -61,6 +61,8 @@ async function loadContent() {
     spotlightTeamId: null,
     spotlightEndsAt: null,
     projectorQrVisible: false,
+    teamIntroVisible: false,
+    teamIntroIndex: 0,
   };
   state = initialState;
 
@@ -119,7 +121,6 @@ function applyServerState(payload) {
   hasLoadedState = true;
   revision = payload.revision;
   state = payload.state;
-  if (page === "teams") introCursor = Math.min(introCursor, Math.max(state.teams.length - 1, 0));
   render();
   announceSync("LIVE");
 }
@@ -317,6 +318,59 @@ function enableApplause() {
   }
 }
 
+function launchIntroConfetti() {
+  const canvas = $("#team-intro-confetti");
+  if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const context = canvas.getContext("2d");
+  if (!context) return;
+
+  if (confettiAnimationFrame !== null) cancelAnimationFrame(confettiAnimationFrame);
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  canvas.width = width * pixelRatio;
+  canvas.height = height * pixelRatio;
+  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+  const colors = ["#012b72", "#15803d", "#4ade80", "#60a5fa", "#fbbf24", "#fb7185"];
+  const pieces = Array.from({ length: 130 }, () => ({
+    x: Math.random() * width,
+    y: -Math.random() * height * 0.6,
+    speedX: (Math.random() - 0.5) * 3,
+    speedY: 2 + Math.random() * 4,
+    rotation: Math.random() * Math.PI,
+    spin: (Math.random() - 0.5) * 0.18,
+    size: 4 + Math.random() * 7,
+    color: colors[Math.floor(Math.random() * colors.length)],
+  }));
+  const startedAt = performance.now();
+
+  function drawConfetti(now) {
+    context.clearRect(0, 0, width, height);
+    for (const piece of pieces) {
+      piece.x += piece.speedX;
+      piece.y += piece.speedY;
+      piece.speedY += 0.035;
+      piece.rotation += piece.spin;
+      context.save();
+      context.translate(piece.x, piece.y);
+      context.rotate(piece.rotation);
+      context.fillStyle = piece.color;
+      context.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size * 0.65);
+      context.restore();
+    }
+
+    if (now - startedAt < 2400) {
+      confettiAnimationFrame = requestAnimationFrame(drawConfetti);
+    } else {
+      context.clearRect(0, 0, width, height);
+      confettiAnimationFrame = null;
+    }
+  }
+
+  confettiAnimationFrame = requestAnimationFrame(drawConfetti);
+}
+
 function announceRound(roundNumber) {
   if (!roundSpeechEnabled) return;
   const roundNames = ["one", "two", "three", "four"];
@@ -467,29 +521,56 @@ function renderScores() {
 }
 
 function renderTeamIntro() {
-  if (page !== "teams") return;
-  const team = state.teams[introCursor];
-  const card = $("#intro-team-card");
-  const empty = $("#intro-empty");
-  const hasTeam = Boolean(team);
-  card.classList.toggle("hidden", !hasTeam);
-  empty.classList.toggle("hidden", hasTeam);
-  $("#intro-count").textContent = `${state.teams.length} ${state.teams.length === 1 ? "TEAM" : "TEAMS"}`;
-  $("#intro-previous").disabled = !hasTeam || introCursor === 0;
-  $("#intro-next").disabled = !hasTeam || introCursor === state.teams.length - 1;
+  const teamIndex = Math.min(state.teamIntroIndex, Math.max(state.teams.length - 1, 0));
+  const adminNavigation = $("#team-intro-admin-navigation");
+  if (adminNavigation) adminNavigation.classList.toggle("hidden", !state.teamIntroVisible);
+  const openButton = $("#team-intro-open");
+  if (openButton) openButton.disabled = !hasLoadedState || !socket?.connected || state.teamIntroVisible;
+  const previousButton = $("#team-intro-previous");
+  if (previousButton) previousButton.disabled = !hasLoadedState || !socket?.connected || teamIndex === 0;
+  const nextButton = $("#team-intro-next");
+  if (nextButton) nextButton.disabled = !hasLoadedState || !socket?.connected || teamIndex >= state.teams.length - 1;
+  const closeButton = $("#team-intro-close");
+  if (closeButton) closeButton.disabled = !hasLoadedState || !socket?.connected;
+  const position = $("#team-intro-admin-position");
+  if (position) position.textContent = `TEAM ${teamIndex + 1} OF ${state.teams.length}`;
+  const hint = $("#team-intro-admin-hint");
+  if (hint) hint.classList.toggle("hidden", state.teamIntroVisible);
 
-  const progress = $("#intro-progress");
-  progress.innerHTML = state.teams.map((_, index) => `<span class="intro-progress-segment ${index < introCursor ? "is-done" : ""} ${index === introCursor ? "is-current" : ""}"></span>`).join("");
+  const modal = $("#projector-team-intro");
+  if (!modal) return;
+  const isVisible = page === "projector" && state.teamIntroVisible;
+  const team = state.teams[teamIndex];
+  modal.classList.toggle("hidden", !isVisible);
+  modal.setAttribute("aria-hidden", String(!isVisible));
 
-  if (team) {
-    card.style.setProperty("--team-color", team.color);
-    $("#intro-team-number").textContent = `TEAM ${String(introCursor + 1).padStart(2, "0")} / ${String(state.teams.length).padStart(2, "0")}`;
-    const introAvatar = $("#intro-team-avatar");
-    const introLogo = teamLogoMarkup(team, "intro-team-logo");
-    introAvatar.innerHTML = introLogo || `<span id="intro-team-initial">${escapeHtml(team.name.trim().charAt(0).toUpperCase())}</span>`;
-    $("#intro-team-name").textContent = team.name;
-    $("#intro-team-caption").textContent = content.texts.teamIntroCaption;
+  const count = $("#projector-intro-team-count");
+  if (count) count.textContent = `${state.teams.length} ${state.teams.length === 1 ? "TEAM" : "TEAMS"}`;
+  const progress = $("#projector-intro-progress");
+  if (progress) {
+    progress.innerHTML = state.teams.map((_, index) =>
+      `<span class="intro-progress-segment ${index < teamIndex ? "is-done" : ""} ${index === teamIndex ? "is-current" : ""}"></span>`,
+    ).join("");
   }
+
+  const isNewIntroduction = isVisible && (!lastIntroVisible || teamIndex !== lastIntroIndex);
+  if (team && isVisible) {
+    const card = $("#projector-intro-team-card");
+    card.style.setProperty("--team-color", team.color);
+    $("#projector-intro-team-number").textContent = `TEAM ${String(teamIndex + 1).padStart(2, "0")} / ${String(state.teams.length).padStart(2, "0")}`;
+    $("#projector-intro-team-avatar").innerHTML =
+      teamLogoMarkup(team, "intro-team-logo") || `<span>${escapeHtml(team.name.trim().charAt(0).toUpperCase())}</span>`;
+    $("#projector-intro-team-name").textContent = team.name;
+    if (isNewIntroduction) {
+      card.classList.remove("is-entering");
+      void card.offsetWidth;
+      card.classList.add("is-entering");
+      playApplause();
+      launchIntroConfetti();
+    }
+  }
+  lastIntroVisible = isVisible;
+  lastIntroIndex = teamIndex;
 }
 
 function render() {
@@ -572,7 +653,6 @@ function bindAdminControls() {
 
   const reset = $("#reset-event");
   if (reset) reset.addEventListener("click", () => {
-    introCursor = 0;
     setState({
       ...initialState,
       teams: initialState.teams.map((team) => ({ ...team, score: 0 })),
@@ -587,6 +667,25 @@ function bindAdminControls() {
     });
     showToast(state.projectorQrVisible ? "Projector QR is now on screen." : "Projector QR hidden.");
   });
+
+  const teamIntroOpen = $("#team-intro-open");
+  if (teamIntroOpen) teamIntroOpen.addEventListener("click", () => updateState((nextState) => {
+    nextState.teamIntroVisible = true;
+    nextState.teamIntroIndex = 0;
+    nextState.projectorQrVisible = false;
+  }));
+  const teamIntroPrevious = $("#team-intro-previous");
+  if (teamIntroPrevious) teamIntroPrevious.addEventListener("click", () => updateState((nextState) => {
+    nextState.teamIntroIndex = Math.max(0, nextState.teamIntroIndex - 1);
+  }));
+  const teamIntroNext = $("#team-intro-next");
+  if (teamIntroNext) teamIntroNext.addEventListener("click", () => updateState((nextState) => {
+    nextState.teamIntroIndex = Math.min(nextState.teams.length - 1, nextState.teamIntroIndex + 1);
+  }));
+  const teamIntroClose = $("#team-intro-close");
+  if (teamIntroClose) teamIntroClose.addEventListener("click", () => updateState((nextState) => {
+    nextState.teamIntroVisible = false;
+  }));
 }
 
 function bindScoreControls() {
@@ -660,63 +759,6 @@ function bindSpotlight() {
 }
 
 function bindTeamIntroductions() {
-  const playButton = $("#intro-play");
-  if (!playButton) return;
-
-  function stopIntroductions() {
-    if (introInterval !== null) window.clearInterval(introInterval);
-    introInterval = null;
-    $("#intro-play-label").textContent = "Start introductions";
-  }
-
-  function nextTeam() {
-    if (introCursor < state.teams.length - 1) {
-      introCursor += 1;
-      playApplause();
-      const card = $("#intro-team-card");
-      card.classList.remove("is-entering");
-      void card.offsetWidth;
-      card.classList.add("is-entering");
-      renderTeamIntro();
-    } else {
-      stopIntroductions();
-      $("#intro-play-label").textContent = "Play again";
-      $("#intro-hint").textContent = "That’s every team. Ready for the quiz?";
-    }
-  }
-
-  function startIntroductions() {
-    if (!state.teams.length) return;
-    if (introCursor >= state.teams.length - 1) introCursor = 0;
-    enableApplause();
-    renderTeamIntro();
-    $("#intro-play-label").textContent = "Pause introductions";
-    $("#intro-hint").textContent = "Next team in a few seconds — use the arrows to skip ahead.";
-    introInterval = window.setInterval(nextTeam, 4200);
-  }
-
-  playButton.addEventListener("click", () => {
-    if (introInterval !== null) {
-      stopIntroductions();
-      $("#intro-hint").textContent = "Introductions paused. Resume when you’re ready.";
-    } else {
-      startIntroductions();
-    }
-  });
-  $("#intro-previous").addEventListener("click", () => {
-    if (introCursor > 0) {
-      introCursor -= 1;
-      playApplause();
-    }
-    renderTeamIntro();
-  });
-  $("#intro-next").addEventListener("click", () => {
-    if (introCursor < state.teams.length - 1) {
-      introCursor += 1;
-      playApplause();
-    }
-    renderTeamIntro();
-  });
   const applauseToggle = $("#intro-applause-toggle");
   if (applauseToggle) applauseToggle.addEventListener("click", () => {
     if (applauseEnabled) {
@@ -727,9 +769,6 @@ function bindTeamIntroductions() {
       enableApplause();
     }
   });
-  introStartTimeout = window.setTimeout(() => {
-    if (introInterval === null && state.teams.length > 1) startIntroductions();
-  }, 900);
 }
 
 function bindProjectorSound() {
@@ -777,6 +816,5 @@ async function initialize() {
 
 void initialize();
 window.addEventListener("beforeunload", () => {
-  window.clearTimeout(introStartTimeout);
-  if (introInterval !== null) window.clearInterval(introInterval);
+  if (confettiAnimationFrame !== null) cancelAnimationFrame(confettiAnimationFrame);
 });

@@ -15,10 +15,7 @@
   <body data-page="projector">
     <div class="page-shell projector-shell">
       <header class="topbar">
-        <a class="brand" href="/admin" aria-label="Quiz Night admin"><img src="/logo.svg" alt="Quiz Night" /></a>
-        <nav class="section-nav" aria-label="Quiz sections">
-          <a class="nav-link" href="/admin">Control board</a><a class="nav-link is-active" href="/projector" aria-current="page">Projector</a><a class="nav-link" href="/scores">Score entry</a>
-        </nav>
+        <div class="brand"><img src="/logo.svg" alt="Quiz Night" /></div>
         <div class="projector-actions"><span class="sync-indicator"><span class="live-dot"></span><span data-sync-status>CONNECTING</span></span><button class="button button-quiet sound-toggle" id="timer-sound-toggle" type="button" aria-pressed="false">Enable sound</button><button class="icon-button fullscreen-button" id="fullscreen-toggle" type="button" aria-label="Enter fullscreen" title="Enter fullscreen">⛶</button></div>
       </header>
       <main class="projector-main">
@@ -41,7 +38,6 @@
           <article class="panel projector-scoreboard projector-leaderboard">
             <div class="section-heading">
               <div><p class="eyebrow">LIVE LEADERBOARD</p><h2>Teams &amp; scores <span class="count-badge" id="projector-team-count">0</span></h2></div>
-              <a class="projector-intro-link" href="/teams">Meet the teams ↗</a>
             </div>
             <ol class="projector-score-list" id="projector-score-list"></ol>
             <div class="empty-state hidden" id="projector-empty">Teams will appear here when the quiz begins.</div>
@@ -51,6 +47,24 @@
         <footer class="footer"><span data-copy="projectorPrompt">LOOK UP. THINK FAST.</span><span>SCORES UPDATE LIVE</span></footer>
       </main>
     </div>
+    <section class="projector-team-intro hidden" id="projector-team-intro" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="projector-intro-team-name">
+      <canvas class="team-intro-confetti" id="team-intro-confetti" aria-hidden="true"></canvas>
+      <div class="projector-team-intro-content" aria-live="polite">
+        <p class="eyebrow team-intro-announcement" data-copy="teamIntroEyebrow">GIVE IT UP FOR...</p>
+        <div class="intro-team-stage">
+          <div class="intro-team-glow"></div>
+          <div class="intro-team-card" id="projector-intro-team-card">
+            <span class="intro-team-number" id="projector-intro-team-number">TEAM 01</span>
+            <span class="intro-team-avatar" id="projector-intro-team-avatar"><span id="projector-intro-team-initial">T</span></span>
+            <h1 id="projector-intro-team-name">Team name</h1>
+            <p data-copy="teamIntroCaption">Are you ready to play?</p>
+          </div>
+        </div>
+        <div class="intro-progress" id="projector-intro-progress" aria-label="Team introduction progress"></div>
+        <p class="projector-team-intro-caption">MAKE SOME NOISE · <span id="projector-intro-team-count">0 TEAMS</span></p>
+        <button class="button button-quiet intro-applause-button" id="intro-applause-toggle" type="button" aria-pressed="false">Enable applause</button>
+      </div>
+    </section>
     <section class="projector-qr-dialog hidden" id="projector-qr-dialog" role="dialog" aria-modal="true" aria-labelledby="projector-qr-title" aria-hidden="true">
       <div class="projector-qr-content">
         <p class="eyebrow">JOIN THE LIVE DISPLAY</p>
