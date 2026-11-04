@@ -13,6 +13,10 @@ QUIZ_AUTH_PASSWORD=replace-this-with-a-unique-password-of-at-least-8-characters
 The server loads `.env` automatically. Environment variables already set by
 the host take precedence over values in the file.
 
+The projector plays `public/alarm.mp3` when the timer expires. The projector
+operator must select **Enable sound** once per browser session before playback
+is allowed.
+
 When `DATABASE_URL` is set, quiz state is stored in PostgreSQL in the
 `quiz_state` table. Set it to Render Postgres's **internal** connection URL
 when the web service and database are in the same Render region. The app

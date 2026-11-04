@@ -10,7 +10,6 @@ let revision = -1;
 let hasLoadedState = false;
 let socket;
 let toastTimeout = null;
-let timerAudioContext = null;
 let applauseAudioContext = null;
 let applauseEnabled = false;
 let confettiAnimationFrame = null;
@@ -192,67 +191,71 @@ function updateTimerElements(display, progress, status) {
 }
 
 function playTimerSound() {
-  if (!timerAudioContext || timerAudioContext.state !== "running") {
+  const timerAudio = $("#timer-alarm");
+  if (!timerAudio || !timerSoundEnabled) {
+    console.error("Could not play the time-up sound because alarm.mp3 is unavailable or not enabled.");
     const soundStatus = $("#timer-sound-status");
-    if (soundStatus) soundStatus.textContent = "Sound is unavailable";
+    if (soundStatus) soundStatus.textContent = "Time-up sound is unavailable";
     return;
   }
 
-  const startTime = timerAudioContext.currentTime;
-  for (let ring = 0; ring < 3; ring += 1) {
-    [880, 660].forEach((frequency, index) => {
-      const oscillator = timerAudioContext.createOscillator();
-      const volume = timerAudioContext.createGain();
-      const toneStart = startTime + ring * 1.08 + index * 0.38;
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(frequency, toneStart);
-      volume.gain.setValueAtTime(0.001, toneStart);
-      volume.gain.exponentialRampToValueAtTime(0.4, toneStart + 0.02);
-      volume.gain.setValueAtTime(0.4, toneStart + 0.2);
-      volume.gain.exponentialRampToValueAtTime(0.001, toneStart + 0.32);
-      oscillator.connect(volume);
-      volume.connect(timerAudioContext.destination);
-      oscillator.start(toneStart);
-      oscillator.stop(toneStart + 0.33);
-    });
-  }
+  timerAudio.currentTime = 0;
+  void timerAudio.play().catch((error) => {
+    timerSoundEnabled = false;
+    console.error("Could not play the time-up MP3:", error);
+    const soundToggle = $("#timer-sound-toggle");
+    const soundStatus = $("#timer-sound-status");
+    if (soundToggle) {
+      soundToggle.setAttribute("aria-pressed", "false");
+      soundToggle.textContent = "Enable sound";
+    }
+    if (soundStatus) soundStatus.textContent = "Could not play the time-up sound";
+  });
 }
 
-function enableTimerSound() {
+async function enableTimerSound() {
   if (page !== "projector") return;
-  if (!window.AudioContext) {
-    console.error("Timer sound is unavailable because this browser does not support Web Audio.");
+  const timerAudio = $("#timer-alarm");
+  if (!timerAudio) {
+    console.error("Could not enable the time-up sound because the alarm audio element is missing.");
     const soundStatus = $("#timer-sound-status");
-    if (soundStatus) soundStatus.textContent = "Sound is not supported";
+    if (soundStatus) soundStatus.textContent = "Time-up sound is unavailable";
     return;
   }
 
+  timerAudio.muted = true;
+  timerAudio.currentTime = 0;
   try {
-    timerAudioContext ??= new window.AudioContext();
-    void timerAudioContext.resume().then(() => {
-      timerSoundEnabled = timerAudioContext.state === "running";
-      roundSpeechEnabled = timerSoundEnabled && "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
-      const soundToggle = $("#timer-sound-toggle");
-      const soundStatus = $("#timer-sound-status");
-      if (soundToggle) {
-        soundToggle.setAttribute("aria-pressed", String(timerSoundEnabled));
-        soundToggle.textContent = timerSoundEnabled ? "Sound on" : "Enable sound";
-      }
-      if (soundStatus) soundStatus.textContent = timerSoundEnabled
-        ? roundSpeechEnabled
-          ? "Time-up sound and spoken round announcements are enabled on this device."
-          : "Time-up sound is enabled; spoken round announcements are unavailable in this browser."
-        : "Tap to enable the time-up sound.";
-      if (roundSpeechEnabled) announceRound(state.roundNumber);
-    }).catch((error) => {
-      console.error("Could not enable timer sound:", error);
-      const soundStatus = $("#timer-sound-status");
-      if (soundStatus) soundStatus.textContent = "Could not enable sound";
-    });
-  } catch (error) {
-    console.error("Could not initialize timer sound:", error);
+    await timerAudio.play();
+    timerAudio.pause();
+    timerAudio.currentTime = 0;
+    timerAudio.muted = false;
+    timerSoundEnabled = true;
+    roundSpeechEnabled = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+    const soundToggle = $("#timer-sound-toggle");
     const soundStatus = $("#timer-sound-status");
-    if (soundStatus) soundStatus.textContent = "Could not enable sound";
+    if (soundToggle) {
+      soundToggle.setAttribute("aria-pressed", "true");
+      soundToggle.textContent = "Sound on";
+    }
+    if (soundStatus) soundStatus.textContent = roundSpeechEnabled
+      ? "Time-up sound and spoken round announcements are enabled on this device."
+      : "Time-up sound is enabled; spoken round announcements are unavailable in this browser.";
+    if (roundSpeechEnabled) announceRound(state.roundNumber);
+  } catch (error) {
+    timerAudio.pause();
+    timerAudio.muted = false;
+    timerSoundEnabled = false;
+    console.error("Could not enable time-up MP3:", error);
+    const soundToggle = $("#timer-sound-toggle");
+    if (soundToggle) {
+      soundToggle.setAttribute("aria-pressed", "false");
+      soundToggle.textContent = "Enable sound";
+    }
+    const soundStatus = $("#timer-sound-status");
+    if (soundStatus) soundStatus.textContent = timerAudio.error
+      ? "Could not load public/alarm.mp3"
+      : "Could not enable sound";
   }
 }
 

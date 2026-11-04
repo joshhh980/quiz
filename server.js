@@ -42,6 +42,7 @@ const files = {
   "/scores": { name: "scores.html", type: "text/html; charset=utf-8" },
   "/styles.css": { name: "styles.css", type: "text/css; charset=utf-8" },
   "/app.js": { name: "app.js", type: "text/javascript; charset=utf-8" },
+  "/alarm.mp3": { name: "alarm.mp3", type: "audio/mpeg" },
   "/logo.svg": { name: "logo.png", type: "image/png; charset=utf-8" },
 };
 
