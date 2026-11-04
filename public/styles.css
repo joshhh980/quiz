@@ -295,6 +295,43 @@ h1 { margin-bottom: 7px; font-family: var(--display); font-size: clamp(32px, 4vw
 .team-intro-admin-navigation > span { color: var(--muted); font-family: var(--mono); font-size: 9px; letter-spacing: .08em; }
 .team-intro-admin-navigation .text-button { padding: 8px; }
 .team-intro-admin-hint { margin: 8px 0 0; color: var(--muted); font-size: 10px; text-align: center; }
+.winner-admin-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.winner-admin-controls label { color: var(--muted); font-family: var(--mono); font-size: 9px; }
+.winner-admin-controls select { min-width: 165px; height: 34px; padding: 0 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--text); background: #fff; font-size: 10px; }
+.projector-winner-overlay { --team-color: var(--green); position: fixed; z-index: 30; inset: 0; display: grid; overflow-y: auto; place-items: center; padding: 25px; background: radial-gradient(ellipse at center, #fff 0%, #e8eef5 100%); animation: reveal-in .3s ease both; }
+.projector-winner-content { position: relative; z-index: 1; display: flex; width: min(850px, 100%); min-height: min(100%, 680px); flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.winner-kicker { color: var(--green); font-size: 12px; letter-spacing: .24em; }
+.winner-trophy { display: grid; width: 82px; height: 82px; place-items: center; margin: 10px 0 22px; border: 1px solid color-mix(in srgb, var(--team-color), transparent 55%); border-radius: 50%; color: var(--team-color); background: color-mix(in srgb, var(--team-color), white 90%); box-shadow: 0 0 65px color-mix(in srgb, var(--team-color), transparent 78%); font-size: 46px; animation: winner-trophy .8s cubic-bezier(.15,.8,.25,1) both; }
+.winner-label { margin: 0 0 8px; color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: .18em; }
+.projector-winner-content h1 { max-width: 100%; margin: 0; color: color-mix(in srgb, var(--team-color), #17212b 50%); font-size: clamp(42px, 10vw, 100px); letter-spacing: -.05em; overflow-wrap: anywhere; animation: team-reveal .7s cubic-bezier(.15,.8,.25,1) both; }
+.winner-score { margin: 20px 0 0; color: var(--blue); font-family: var(--mono); font-size: 14px; letter-spacing: .18em; }
+.winner-score span { color: var(--team-color); font-family: var(--display); font-size: 30px; font-weight: 700; }
+.winner-team-mark { display: grid; width: 74px; height: 74px; place-items: center; overflow: hidden; margin-top: 24px; border: 1px solid color-mix(in srgb, var(--team-color), transparent 55%); border-radius: 20px; color: var(--team-color); background: color-mix(in srgb, var(--team-color), white 90%); font-family: var(--display); font-size: 30px; font-weight: 600; }
+.winner-team-logo { width: 100%; height: 100%; object-fit: cover; }
+.showcase-page { display: grid; min-height: 100svh; place-items: center; padding: 28px; background: radial-gradient(ellipse at 50% 42%, #fff 0%, var(--background) 72%); }
+.showcase-card { display: flex; width: min(760px, 100%); flex-direction: column; align-items: center; text-align: center; animation: reveal-in .45s ease both; }
+.showcase-logo { width: 145px; height: 38px; margin-bottom: clamp(28px, 6vh, 58px); object-fit: contain; }
+.showcase-card > .eyebrow { margin-bottom: 10px; color: var(--green); font-size: 10px; letter-spacing: .16em; }
+.showcase-card h1 { margin: 0; color: var(--blue); font-size: clamp(30px, 5vw, 46px); letter-spacing: -.04em; }
+.qr-code-frame { display: grid; width: min(340px, 76vw); aspect-ratio: 1; place-items: center; margin-top: 26px; padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: #fff; box-shadow: 0 22px 65px rgb(1 43 114 / 12%); }
+.qr-code-frame img { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.qr-destination { max-width: 100%; margin: 16px 0 0; color: var(--blue); font-family: var(--mono); font-size: clamp(10px, 2vw, 13px); overflow-wrap: anywhere; }
+.showcase-caption { max-width: 420px; margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.guest-of-honor-card { width: min(900px, 100%); padding: 34px 20px; }
+.guest-of-honor-card .showcase-logo { margin-bottom: clamp(34px, 8vh, 72px); }
+.honor-emblem { display: grid; width: 84px; height: 84px; place-items: center; margin: 15px 0 18px; border: 1px solid color-mix(in srgb, var(--green), transparent 60%); border-radius: 50%; color: var(--green); background: color-mix(in srgb, var(--green), white 92%); box-shadow: 0 12px 45px color-mix(in srgb, var(--green), transparent 87%); font-size: 42px; }
+.honor-title { margin: 0 0 12px; color: var(--green); font-family: var(--mono); font-size: 11px; letter-spacing: .2em; }
+.guest-of-honor-card h1 { color: var(--blue); font-size: clamp(48px, 10vw, 104px); letter-spacing: -.06em; }
+.honor-divider { display: flex; width: min(270px, 70%); align-items: center; gap: 15px; margin: 10px 0 24px; color: var(--green); }
+.honor-divider span { height: 1px; flex: 1; background: color-mix(in srgb, var(--green), transparent 60%); }
+.honor-divider i { font-size: 14px; font-style: normal; }
+.honor-placeholder { margin: 0; color: #36414c; font-family: var(--display); font-size: clamp(18px, 3vw, 25px); }
+.guest-of-honor-card .showcase-caption { margin-top: 8px; }
+
+@keyframes winner-trophy {
+  from { opacity: 0; transform: scale(.5) rotate(-18deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
 .content-file-hint { margin: 15px 0 0; color: var(--muted); font-size: 10px; }
 .content-file-hint code { color: var(--green); font-family: var(--mono); }
 
@@ -345,4 +382,8 @@ h1 { margin-bottom: 7px; font-family: var(--display); font-size: clamp(32px, 4vw
   .intro-team-card h1 { font-size: clamp(34px, 11vw, 54px); }
   .projector-team-intro { padding: 15px 17px; }
   .projector-team-intro-content { min-height: 100%; }
+  .projector-winner-overlay { padding: 18px; }
+  .projector-winner-content { min-height: 100%; }
+  .winner-admin-controls select { flex: 1; }
+  .showcase-page { padding: 18px; }
 }

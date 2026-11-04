@@ -1,7 +1,6 @@
 const http = require("node:http");
 const { createHash, timingSafeEqual } = require("node:crypto");
 const { mkdir, readFile, writeFile } = require("node:fs/promises");
-const os = require("node:os");
 const path = require("node:path");
 const { Server } = require("socket.io");
 const { Pool } = require("pg");
@@ -40,9 +39,13 @@ const files = {
   "/admin": { name: "index.html", type: "text/html; charset=utf-8" },
   "/projector": { name: "projector.html", type: "text/html; charset=utf-8" },
   "/scores": { name: "scores.html", type: "text/html; charset=utf-8" },
+  "/qr": { name: "qr.html", type: "text/html; charset=utf-8" },
+  "/guest-of-honor": { name: "guest-of-honor.html", type: "text/html; charset=utf-8" },
   "/styles.css": { name: "styles.css", type: "text/css; charset=utf-8" },
   "/app.js": { name: "app.js", type: "text/javascript; charset=utf-8" },
+  "/qr.js": { name: "qr.js", type: "text/javascript; charset=utf-8" },
   "/alarm.mp3": { name: "alarm.mp3", type: "audio/mpeg" },
+  "/applause.mp3": { name: "applause.mp3", type: "audio/mpeg" },
   "/logo.svg": { name: "logo.png", type: "image/png; charset=utf-8" },
 };
 
@@ -81,25 +84,18 @@ function acknowledgeUpdate(acknowledge, result) {
   if (typeof acknowledge === "function") acknowledge(result);
 }
 
-function projectorUrl(request) {
-  const forwardedProtocol = request.headers["x-forwarded-proto"]?.split(",")[0].trim();
-  const protocol = request.socket.encrypted || forwardedProtocol === "https" ? "https" : "http";
-  const requestUrl = new URL(request.url, `${protocol}://${request.headers.host}`);
-  const hostName = requestUrl.hostname.replace(/^\[|\]$/g, "").toLowerCase();
-  const isLoopback = hostName === "localhost" || hostName === "::1" || /^127(?:\.\d{1,3}){3}$/.test(hostName);
-
-  if (isLoopback) {
-    const addresses = Object.values(os.networkInterfaces()).flatMap((interfaces) => interfaces || [])
-      .filter((address) => address.family === "IPv4" && !address.internal &&
-        /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(address.address));
-    const lanAddress = addresses[0]?.address;
-    if (lanAddress) requestUrl.hostname = lanAddress;
+function projectorUrl() {
+  if (!process.env.APP_URL) throw new Error("APP_URL is not configured.");
+  let appUrl;
+  try {
+    appUrl = new URL(process.env.APP_URL);
+  } catch (error) {
+    throw new Error("APP_URL must be a valid absolute URL.", { cause: error });
   }
-
-  requestUrl.pathname = "/projector";
-  requestUrl.search = "";
-  requestUrl.hash = "";
-  return requestUrl.toString();
+  if (!["http:", "https:"].includes(appUrl.protocol) || appUrl.username || appUrl.password) {
+    throw new Error("APP_URL must be an HTTP(S) URL without embedded credentials.");
+  }
+  return new URL("/projector", appUrl.origin).toString();
 }
 
 function isValidContent(value) {
@@ -138,6 +134,8 @@ function newGameState() {
     projectorQrVisible: false,
     teamIntroVisible: false,
     teamIntroIndex: 0,
+    winnerVisible: false,
+    winnerTeamId: null,
   };
 }
 
@@ -206,6 +204,8 @@ async function restoreState() {
       projectorQrVisible: savedState.projectorQrVisible ?? false,
       teamIntroVisible: savedState.teamIntroVisible ?? false,
       teamIntroIndex: savedState.teamIntroIndex ?? 0,
+      winnerVisible: savedState.winnerVisible ?? false,
+      winnerTeamId: savedState.winnerTeamId ?? null,
       teams: [
         ...content.teams.map((team, index) => ({
           ...team,
@@ -273,7 +273,10 @@ function isValidState(value) {
     typeof value.projectorQrVisible === "boolean" &&
     typeof value.teamIntroVisible === "boolean" &&
     Number.isInteger(value.teamIntroIndex) && value.teamIntroIndex >= 0 &&
-    value.teamIntroIndex < value.teams.length;
+    value.teamIntroIndex < value.teams.length &&
+    typeof value.winnerVisible === "boolean" &&
+    (value.winnerTeamId === null || value.teams.some((team) => team.id === value.winnerTeamId)) &&
+    (!value.winnerVisible || value.winnerTeamId !== null);
 }
 
 const server = http.createServer(async (request, response) => {
@@ -317,7 +320,7 @@ const server = http.createServer(async (request, response) => {
 
   if (pathname === "/api/projector-qr.svg" && request.method === "GET") {
     try {
-      const qrSvg = await QRCode.toString(projectorUrl(request), {
+      const qrSvg = await QRCode.toString(projectorUrl(), {
         type: "svg",
         errorCorrectionLevel: "H",
         margin: 2,
@@ -333,6 +336,26 @@ const server = http.createServer(async (request, response) => {
       console.error("Could not generate projector QR code:", error);
       response.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
       response.end("Unable to generate projector QR code.");
+    }
+    return;
+  }
+
+  if (pathname === "/api/projector-url" && request.method === "GET") {
+    try {
+      response.writeHead(200, {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+      });
+      response.end(JSON.stringify({ url: projectorUrl() }));
+    } catch (error) {
+      console.error("Could not provide projector URL:", error);
+      response.writeHead(503, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+      });
+      response.end("Set APP_URL to the public base URL of this app.");
     }
     return;
   }

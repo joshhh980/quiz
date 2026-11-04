@@ -10,11 +10,12 @@ let revision = -1;
 let hasLoadedState = false;
 let socket;
 let toastTimeout = null;
-let applauseAudioContext = null;
 let applauseEnabled = false;
 let confettiAnimationFrame = null;
 let lastIntroVisible = false;
 let lastIntroIndex = -1;
+let lastWinnerVisible = false;
+let lastWinnerTeamId = null;
 let lastTimerObservation = null;
 let timerSoundEnabled = false;
 let roundSpeechEnabled = false;
@@ -62,6 +63,8 @@ async function loadContent() {
     projectorQrVisible: false,
     teamIntroVisible: false,
     teamIntroIndex: 0,
+    winnerVisible: false,
+    winnerTeamId: null,
   };
   state = initialState;
 
@@ -260,69 +263,73 @@ async function enableTimerSound() {
 }
 
 function playApplause() {
-  if (!applauseEnabled || !applauseAudioContext || applauseAudioContext.state !== "running") return;
-
-  const sampleCount = Math.floor(applauseAudioContext.sampleRate * 0.09);
-  const noiseBuffer = applauseAudioContext.createBuffer(1, sampleCount, applauseAudioContext.sampleRate);
-  const samples = noiseBuffer.getChannelData(0);
-  for (let index = 0; index < sampleCount; index += 1) {
-    samples[index] = Math.random() * 2 - 1;
+  if (!applauseEnabled) return;
+  const applauseAudio = $("#applause-audio");
+  if (!applauseAudio) {
+    console.error("Could not play applause because the applause audio element is missing.");
+    showToast("Applause audio is unavailable.");
+    return;
   }
 
-  const startTime = applauseAudioContext.currentTime;
-  const clapCount = 34;
-  for (let clap = 0; clap < clapCount; clap += 1) {
-    const source = applauseAudioContext.createBufferSource();
-    const filter = applauseAudioContext.createBiquadFilter();
-    const volume = applauseAudioContext.createGain();
-    const clapStart = startTime + Math.random() * 3.2;
-    const peak = 0.08 + Math.random() * 0.12;
-    source.buffer = noiseBuffer;
-    filter.type = "bandpass";
-    filter.frequency.setValueAtTime(1100 + Math.random() * 2100, clapStart);
-    filter.Q.setValueAtTime(0.65, clapStart);
-    volume.gain.setValueAtTime(0.001, clapStart);
-    volume.gain.exponentialRampToValueAtTime(peak, clapStart + 0.004);
-    volume.gain.exponentialRampToValueAtTime(0.001, clapStart + 0.075);
-    source.connect(filter);
-    filter.connect(volume);
-    volume.connect(applauseAudioContext.destination);
-    source.start(clapStart);
-    source.stop(clapStart + 0.09);
-  }
+  applauseAudio.currentTime = 0;
+  void applauseAudio.play().catch((error) => {
+    applauseEnabled = false;
+    applauseAudio.pause();
+    console.error("Could not play the applause MP3:", error);
+    const applauseToggle = $("#intro-applause-toggle");
+    if (applauseToggle) {
+      applauseToggle.textContent = "Enable applause";
+      applauseToggle.setAttribute("aria-pressed", "false");
+    }
+    showToast("Couldn't play applause. Enable it again on the projector.");
+  });
 }
 
-function enableApplause() {
-  if (applauseEnabled) return;
-  if (!window.AudioContext) {
-    console.error("Applause is unavailable because this browser does not support Web Audio.");
+async function enableApplause() {
+  const applauseAudio = $("#applause-audio");
+  const applauseToggle = $("#intro-applause-toggle");
+  if (!applauseAudio) {
+    console.error("Could not enable applause because the applause audio element is missing.");
     const button = $("#intro-applause-toggle");
     if (button) button.textContent = "Applause unavailable";
     return;
   }
 
+  if (applauseEnabled) {
+    applauseAudio.pause();
+    applauseAudio.currentTime = 0;
+    applauseEnabled = false;
+    if (applauseToggle) {
+      applauseToggle.textContent = "Enable applause";
+      applauseToggle.setAttribute("aria-pressed", "false");
+    }
+    return;
+  }
+
+  applauseAudio.currentTime = 0;
   try {
-    applauseAudioContext ??= new window.AudioContext();
-    void applauseAudioContext.resume().then(() => {
-      applauseEnabled = applauseAudioContext.state === "running";
-      const button = $("#intro-applause-toggle");
-      if (button) {
-        button.textContent = applauseEnabled ? "Applause on" : "Enable applause";
-        button.setAttribute("aria-pressed", String(applauseEnabled));
-      }
-      if (applauseEnabled) playApplause();
-    }).catch((error) => {
-      console.error("Could not enable team introduction applause:", error);
-      showToast("Couldn't enable applause in this browser.");
-    });
+    await applauseAudio.play();
+    applauseEnabled = true;
+    if (applauseToggle) {
+      applauseToggle.textContent = "Applause on";
+      applauseToggle.setAttribute("aria-pressed", "true");
+    }
   } catch (error) {
-    console.error("Could not initialize team introduction applause:", error);
-    showToast("Couldn't enable applause in this browser.");
+    applauseAudio.pause();
+    applauseEnabled = false;
+    console.error("Could not enable applause MP3:", error);
+    if (applauseToggle) {
+      applauseToggle.textContent = "Enable applause";
+      applauseToggle.setAttribute("aria-pressed", "false");
+    }
+    showToast(applauseAudio.error
+      ? "Could not load public/applause.mp3."
+      : "Couldn't enable applause in this browser.");
   }
 }
 
-function launchIntroConfetti() {
-  const canvas = $("#team-intro-confetti");
+function launchIntroConfetti(canvasSelector = "#team-intro-confetti") {
+  const canvas = $(canvasSelector);
   if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const context = canvas.getContext("2d");
   if (!context) return;
@@ -441,6 +448,48 @@ function renderProjectorQr() {
   projectorQr.setAttribute("aria-hidden", String(!isVisible));
 }
 
+function renderWinner() {
+  const teamSelect = $("#winner-team-select");
+  if (teamSelect) {
+    const selectedTeamId = state.winnerTeamId ?? "";
+    teamSelect.innerHTML = `<option value="">Choose a team to announce</option>${state.teams
+      .map((team) => `<option value="${escapeHtml(team.id)}">${escapeHtml(team.name)}</option>`)
+      .join("")}`;
+    teamSelect.value = selectedTeamId;
+    teamSelect.disabled = !hasLoadedState || !socket?.connected || state.winnerVisible;
+  }
+
+  const openButton = $("#winner-open");
+  if (openButton) {
+    openButton.disabled = !hasLoadedState || !socket?.connected || state.winnerTeamId === null || state.winnerVisible;
+  }
+  const closeButton = $("#winner-close");
+  if (closeButton) {
+    closeButton.classList.toggle("hidden", !state.winnerVisible);
+    closeButton.disabled = !hasLoadedState || !socket?.connected;
+  }
+
+  const modal = $("#projector-winner-overlay");
+  if (!modal) return;
+  const isVisible = page === "projector" && state.winnerVisible;
+  const team = state.teams.find((item) => item.id === state.winnerTeamId);
+  modal.classList.toggle("hidden", !isVisible);
+  modal.setAttribute("aria-hidden", String(!isVisible));
+  if (team && isVisible) {
+    modal.style.setProperty("--team-color", team.color);
+    $("#projector-winner-name").textContent = team.name;
+    $("#projector-winner-score").textContent = String(team.score);
+    $("#projector-winner-mark").innerHTML =
+      teamLogoMarkup(team, "winner-team-logo") || `<span>${escapeHtml(team.name.trim().charAt(0).toUpperCase())}</span>`;
+    if (!lastWinnerVisible || team.id !== lastWinnerTeamId) {
+      launchIntroConfetti("#winner-confetti");
+      playApplause();
+    }
+  }
+  lastWinnerVisible = isVisible;
+  lastWinnerTeamId = team?.id ?? null;
+}
+
 function sortedTeams() {
   return state.teams.map((team, index) => ({ ...team, originalIndex: index }))
     .sort((a, b) => b.score - a.score || a.originalIndex - b.originalIndex);
@@ -465,6 +514,7 @@ function renderTeams() {
   renderSpotlight();
   renderScores();
   renderTeamIntro();
+  renderWinner();
 }
 
 function teamLogoMarkup(team, className) {
@@ -667,6 +717,10 @@ function bindAdminControls() {
   if (projectorQrToggle) projectorQrToggle.addEventListener("click", () => {
     updateState((nextState) => {
       nextState.projectorQrVisible = !nextState.projectorQrVisible;
+      if (nextState.projectorQrVisible) {
+        nextState.teamIntroVisible = false;
+        nextState.winnerVisible = false;
+      }
     });
     showToast(state.projectorQrVisible ? "Projector QR is now on screen." : "Projector QR hidden.");
   });
@@ -676,6 +730,7 @@ function bindAdminControls() {
     nextState.teamIntroVisible = true;
     nextState.teamIntroIndex = 0;
     nextState.projectorQrVisible = false;
+    nextState.winnerVisible = false;
   }));
   const teamIntroPrevious = $("#team-intro-previous");
   if (teamIntroPrevious) teamIntroPrevious.addEventListener("click", () => updateState((nextState) => {
@@ -688,6 +743,29 @@ function bindAdminControls() {
   const teamIntroClose = $("#team-intro-close");
   if (teamIntroClose) teamIntroClose.addEventListener("click", () => updateState((nextState) => {
     nextState.teamIntroVisible = false;
+  }));
+
+  const winnerTeamSelect = $("#winner-team-select");
+  if (winnerTeamSelect) winnerTeamSelect.addEventListener("change", (event) => {
+    updateState((nextState) => {
+      nextState.winnerTeamId = event.target.value || null;
+    });
+  });
+  const winnerOpen = $("#winner-open");
+  if (winnerOpen) winnerOpen.addEventListener("click", () => {
+    if (!state.winnerTeamId) {
+      showToast("Choose a winning team first.");
+      return;
+    }
+    updateState((nextState) => {
+      nextState.winnerVisible = true;
+      nextState.teamIntroVisible = false;
+      nextState.projectorQrVisible = false;
+    });
+  });
+  const winnerClose = $("#winner-close");
+  if (winnerClose) winnerClose.addEventListener("click", () => updateState((nextState) => {
+    nextState.winnerVisible = false;
   }));
 }
 
@@ -763,15 +841,7 @@ function bindSpotlight() {
 
 function bindTeamIntroductions() {
   const applauseToggle = $("#intro-applause-toggle");
-  if (applauseToggle) applauseToggle.addEventListener("click", () => {
-    if (applauseEnabled) {
-      applauseEnabled = false;
-      applauseToggle.textContent = "Enable applause";
-      applauseToggle.setAttribute("aria-pressed", "false");
-    } else {
-      enableApplause();
-    }
-  });
+  if (applauseToggle) applauseToggle.addEventListener("click", enableApplause);
 }
 
 function bindProjectorSound() {

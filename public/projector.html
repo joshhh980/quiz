@@ -16,7 +16,7 @@
     <div class="page-shell projector-shell">
       <header class="topbar">
         <div class="brand"><img src="/logo.svg" alt="Quiz Night" /></div>
-        <div class="projector-actions"><span class="sync-indicator"><span class="live-dot"></span><span data-sync-status>CONNECTING</span></span><button class="button button-quiet sound-toggle" id="timer-sound-toggle" type="button" aria-pressed="false">Enable sound</button><button class="icon-button fullscreen-button" id="fullscreen-toggle" type="button" aria-label="Enter fullscreen" title="Enter fullscreen">⛶</button></div>
+        <div class="projector-actions"><span class="sync-indicator"><span class="live-dot"></span><span data-sync-status>CONNECTING</span></span><button class="button button-quiet sound-toggle" id="timer-sound-toggle" type="button" aria-pressed="false">Enable sound</button><button class="button button-quiet sound-toggle" id="intro-applause-toggle" type="button" aria-pressed="false">Enable applause</button><button class="icon-button fullscreen-button" id="fullscreen-toggle" type="button" aria-label="Enter fullscreen" title="Enter fullscreen">⛶</button></div>
       </header>
       <main class="projector-main">
         <section class="projector-topline"><p class="eyebrow" data-copy="eventName">FRIDAY TRIVIA</p><span class="live-label"><span class="live-dot"></span> LIVE GAME</span></section>
@@ -48,6 +48,7 @@
       </main>
     </div>
     <audio id="timer-alarm" src="/alarm.mp3" preload="auto"></audio>
+    <audio id="applause-audio" src="/applause.mp3" preload="auto"></audio>
     <section class="projector-team-intro hidden" id="projector-team-intro" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="projector-intro-team-name">
       <canvas class="team-intro-confetti" id="team-intro-confetti" aria-hidden="true"></canvas>
       <div class="projector-team-intro-content" aria-live="polite">
@@ -63,7 +64,17 @@
         </div>
         <div class="intro-progress" id="projector-intro-progress" aria-label="Team introduction progress"></div>
         <p class="projector-team-intro-caption">MAKE SOME NOISE · <span id="projector-intro-team-count">0 TEAMS</span></p>
-        <button class="button button-quiet intro-applause-button" id="intro-applause-toggle" type="button" aria-pressed="false">Enable applause</button>
+      </div>
+    </section>
+    <section class="projector-winner-overlay hidden" id="projector-winner-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="projector-winner-name">
+      <canvas class="team-intro-confetti" id="winner-confetti" aria-hidden="true"></canvas>
+      <div class="projector-winner-content" aria-live="polite">
+        <p class="eyebrow winner-kicker">THE CHAMPION</p>
+        <div class="winner-trophy" aria-hidden="true">✦</div>
+        <p class="winner-label">QUIZ NIGHT WINNER</p>
+        <h1 id="projector-winner-name">Team name</h1>
+        <p class="winner-score"><span id="projector-winner-score">0</span> POINTS</p>
+        <div class="winner-team-mark" id="projector-winner-mark" aria-hidden="true"></div>
       </div>
     </section>
     <section class="projector-qr-dialog hidden" id="projector-qr-dialog" role="dialog" aria-modal="true" aria-labelledby="projector-qr-title" aria-hidden="true">

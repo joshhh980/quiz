@@ -16,6 +16,15 @@ the host take precedence over values in the file.
 The projector plays `public/alarm.mp3` when the timer expires. The projector
 operator must select **Enable sound** once per browser session before playback
 is allowed.
+Team introductions and winner announcements play `public/applause.mp3` after
+the projector operator selects **Enable applause**.
+
+Set `APP_URL` to the public base URL of the app. The `/qr` page and projector
+QR overlay encode its `/projector` URL.
+
+The admin control board can announce a selected team as the winner on the
+projector. The `/guest-of-honor` page is a standalone recognition display; its
+current title and guest details are placeholders.
 
 When `DATABASE_URL` is set, quiz state is stored in PostgreSQL in the
 `quiz_state` table. Set it to Render Postgres's **internal** connection URL
@@ -34,10 +43,11 @@ directory. To persist that file on Render instead, mount a disk (for example
 at `/var/data`) and set `QUIZ_STATE_FILE=/var/data/.quiz-state.json`.
 
 The shared HTTP Basic Auth credentials protect `/`, `/admin`, and `/scores`.
-The `/projector` display remains public. Team introductions are shown as a
-full-screen overlay on that display and are controlled from the admin page.
-The legacy `/teams` URL redirects to `/projector`. State updates from
-unauthenticated Socket.IO clients are rejected.
+The `/projector`, `/qr`, and `/guest-of-honor` displays remain public. Team
+introductions and winner announcements are shown as full-screen overlays on
+the projector and controlled from the admin page. The legacy `/teams` URL
+redirects to `/projector`. State updates from unauthenticated Socket.IO
+clients are rejected.
 
 Use HTTPS when hosting the app outside a trusted local network. Basic Auth
 credentials are not encrypted unless the connection is protected by TLS.

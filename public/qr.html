@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#eef2f6" />
+    <title>Quiz Night — Projector QR Code</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/qr.js" defer></script>
+  </head>
+  <body class="showcase-page">
+    <main class="showcase-card qr-showcase">
+      <img class="showcase-logo" src="/logo.svg" alt="Quiz Night" />
+      <p class="eyebrow">SCAN TO OPEN THE PROJECTOR</p>
+      <h1>Follow the live quiz</h1>
+      <div class="qr-code-frame">
+        <img src="/api/projector-qr.svg" alt="QR code linking to the live projector display" />
+      </div>
+      <p class="qr-destination" id="qr-destination" aria-live="polite">Loading projector link…</p>
+      <p class="showcase-caption">Point your phone camera at the code to open the live display.</p>
+    </main>
+  </body>
+</html>

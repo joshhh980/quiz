@@ -88,11 +88,21 @@
               </div>
               <p class="team-intro-admin-hint" id="team-intro-admin-hint">Open the team introductions on the projector when you are ready.</p>
             </div>
+            <div class="winner-admin-controls">
+              <label for="winner-team-select">Winning team</label>
+              <select id="winner-team-select" disabled>
+                <option value="">Choose a team to announce</option>
+              </select>
+              <button class="button button-primary" id="winner-open" type="button" disabled>Announce winner</button>
+              <button class="button button-quiet hidden" id="winner-close" type="button" disabled>Hide winner</button>
+            </div>
           </article>
           <article class="panel admin-shortcuts">
             <p class="eyebrow">QUICK LINKS</p>
             <a class="shortcut-card" href="/projector"><span class="shortcut-number">01</span><span><strong>Projector display</strong><small>Timer, teams and live leaderboard</small></span><span class="shortcut-arrow">↗</span></a>
             <a class="shortcut-card" href="/scores"><span class="shortcut-number">02</span><span><strong>Score entry</strong><small>Record and validate team scores</small></span><span class="shortcut-arrow">↗</span></a>
+            <a class="shortcut-card" href="/qr"><span class="shortcut-number">03</span><span><strong>Projector QR code</strong><small>Show a scannable projector link</small></span><span class="shortcut-arrow">↗</span></a>
+            <a class="shortcut-card" href="/guest-of-honor"><span class="shortcut-number">04</span><span><strong>Guest of Honor</strong><small>Open the recognition display</small></span><span class="shortcut-arrow">↗</span></a>
             <button class="button button-quiet projector-qr-toggle" id="projector-qr-toggle" type="button" aria-pressed="false">Show projector QR</button>
             <button class="text-button reset-event-button" id="reset-event" type="button">Start a new event from round 1 <span aria-hidden="true">↗</span></button>
           </article>
