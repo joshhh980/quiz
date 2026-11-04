@@ -46,6 +46,7 @@ const files = {
   "/qr.js": { name: "qr.js", type: "text/javascript; charset=utf-8" },
   "/alarm.mp3": { name: "alarm.mp3", type: "audio/mpeg" },
   "/applause.mp3": { name: "applause.mp3", type: "audio/mpeg" },
+  "/ceo.jpeg": { name: "ceo.jpeg", type: "image/jpeg" },
   "/logo.svg": { name: "logo.png", type: "image/png; charset=utf-8" },
 };
 
